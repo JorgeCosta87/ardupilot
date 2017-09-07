@@ -94,6 +94,10 @@
 #include <AP_Arming/AP_Arming.h>
 #include <AP_VisualOdom/AP_VisualOdom.h>
 
+//#ifdef FAULT_INJECTION
+#include <AP_FaultInjection/AP_FaultInjection.h>
+//#endif
+
 // Configuration
 #include "defines.h"
 #include "config.h"
@@ -1155,6 +1159,14 @@ private:
     void init_capabilities(void);
     void dataflash_periodic(void);
     void accel_cal_update(void);
+
+    /* #FAULT INJECTION */
+
+    AP_FaultInjection fault_injection;
+    void runtime_injection(void);
+
+    /* END FAULT INJECTION */
+
 
 public:
     void mavlink_delay_cb();

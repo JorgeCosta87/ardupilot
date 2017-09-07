@@ -22,6 +22,7 @@
 #include "AP_Compass.h"
 
 class Compass;  // forward declaration
+class AP_FaultInjection;
 class AP_Compass_Backend
 {
 public:
@@ -63,6 +64,15 @@ public:
         DEVTYPE_MMC3416 = 0x0C,
 		DEVTYPE_QMC5883L = 0x0D,
     };
+
+/* 
+    #FAULT INJECTION 
+*/
+
+    AP_FaultInjection *faultInjection = nullptr;
+    void set_faultInjection(AP_FaultInjection *faultInj){faultInjection = faultInj;}
+
+/*END FAULT INJECTION */
 
 
 protected:

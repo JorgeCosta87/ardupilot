@@ -71,7 +71,10 @@ enum aux_sw_func {
     AUXSW_AVOID_ADSB =          38,  // enable AP_Avoidance library
     AUXSW_PRECISION_LOITER =    39,  // enable precision loiter
     AUXSW_AVOID_PROXIMITY =     40,  // enable object avoidance using proximity sensors (ie. horizontal lidar)
-    AUXSW_ARMDISARM =           41,  // arm or disarm vehicle
+    AUXSW_ARMDISARM =           41,  // arm or disarm vehicle 
+    AUXSW_FAULT_INJECTION =     42,  // Start fault injection
+ 
+    
     AUXSW_SWITCH_MAX,
 };
 
@@ -492,3 +495,10 @@ enum DevOptions {
 #define THR_BEHAVE_FEEDBACK_FROM_MID_STICK (1<<0)
 #define THR_BEHAVE_HIGH_THROTTLE_CANCELS_LAND (1<<1)
 #define THR_BEHAVE_DISARM_ON_LAND_DETECT (1<<2)
+
+
+/* #FAULT INJECTION */
+
+#define FAULT_INJECTION
+
+/* END FAULT INJECTION */

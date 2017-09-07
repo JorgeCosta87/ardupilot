@@ -197,7 +197,10 @@ public:
         k_param_attitude_control,
         k_param_pos_control,
         k_param_circle_nav,     // 104
-
+#ifdef FAULT_INJECTION
+        //105 : #FAULT INJECTION
+        k_param_fault_injection = 105,
+#endif
         // 110: Telemetry control
         //
         k_param_gcs0 = 110,
@@ -570,6 +573,14 @@ public:
     
     // control over servo output ranges
     SRV_Channels servo_channels;
+
+/* #FAULT INJECTIOM */
+
+    AP_Int8  inject_enabled;
+    AP_Int32 delay_to_start;
+
+/* END FAULT INJECTION */
+
 };
 
 extern const AP_Param::Info        var_info[];

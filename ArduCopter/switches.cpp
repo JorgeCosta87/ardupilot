@@ -1,5 +1,7 @@
 #include "Copter.h"
 
+#include <stdio.h>
+
 #define CONTROL_SWITCH_DEBOUNCE_TIME_MS  200
 
 //Documentation of Aux Switch Flags:
@@ -196,6 +198,8 @@ void Copter::init_aux_switch_function(int8_t ch_option, uint8_t ch_flag)
         case AUXSW_AVOID_ADSB:
         case AUXSW_PRECISION_LOITER:
         case AUXSW_AVOID_PROXIMITY:
+        case AUXSW_FAULT_INJECTION:
+
             do_aux_switch_function(ch_option, ch_flag);
             break;
     }
@@ -204,7 +208,6 @@ void Copter::init_aux_switch_function(int8_t ch_option, uint8_t ch_flag)
 // do_aux_switch_function - implement the function invoked by the ch7 or ch8 switch
 void Copter::do_aux_switch_function(int8_t ch_function, uint8_t ch_flag)
 {
-
     switch(ch_function) {
         case AUXSW_FLIP:
             // flip if switch is on, positive throttle and we're actually flying
@@ -592,6 +595,17 @@ void Copter::do_aux_switch_function(int8_t ch_function, uint8_t ch_flag)
             case AUX_SWITCH_LOW:
                 init_disarm_motors();
                 break;
+            }
+            break;
+
+        case AUXSW_FAULT_INJECTION:
+            switch(ch_flag){
+                case AUX_SWITCH_HIGH:
+                    g2.inject_enabled.set(1);
+                    break;
+                case AUX_SWITCH_LOW:
+                    g2.inject_enabled.set(0);
+                    break;
             }
             break;
     }

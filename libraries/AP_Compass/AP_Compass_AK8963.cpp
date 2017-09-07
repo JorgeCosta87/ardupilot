@@ -21,6 +21,9 @@
 #include "AP_Compass_AK8963.h"
 #include <AP_InertialSensor/AP_InertialSensor_Invensense.h>
 
+#include <AP_FaultInjection/AP_FaultInjection.h>
+#include <stdio.h>
+
 #define AK8963_I2C_ADDR                                 0x0c
 
 #define AK8963_WIA                                      0x00
@@ -231,7 +234,24 @@ void AP_Compass_AK8963::_update()
         return;
     }
 
+    /* #FAULT INJECTION
+     *
+     * previous code:
+     *
+     *   raw_field = Vector3f(regs.val[0], regs.val[1], regs.val[2]);
+     *
+    */
+
     raw_field = Vector3f(regs.val[0], regs.val[1], regs.val[2]);
+    
+    //printf("before:\n  x: %.4f\n  y: %.4f\n  z: %.4f\n",raw_field.x,raw_field.y,raw_field.z);
+    if(faultInjection != NULL){
+        faultInjection->manipulate_compass_values(&raw_field);
+    }
+    //printf("\nafter:\n  x: %.4f\n  y: %.4f\n  z: %.4f\n",raw_field.x,raw_field.y,raw_field.z);
+
+    /* END FAULT INJECTION */
+
 
     if (is_zero(raw_field.x) && is_zero(raw_field.y) && is_zero(raw_field.z)) {
         return;

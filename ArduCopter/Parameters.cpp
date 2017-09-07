@@ -891,6 +891,16 @@ const AP_Param::Info Copter::var_info[] = {
     // @User: Standard
     GSCALAR(terrain_follow, "TERRAIN_FOLLOW", 0),
 
+/* #FAULT INJECTION */
+
+#ifdef FAULT_INJECTION
+    // @Group: INJ_
+    // @Path: ../libraries/AP_FaultInjection/AP_FaultInjection.cpp
+    GOBJECT(fault_injection, "INJ_", AP_FaultInjection),
+#endif 
+
+/* END FAULT INJECTION */
+
     // @Group:
     // @Path: Parameters.cpp
     GOBJECT(g2, "",  ParametersG2),
@@ -1015,6 +1025,26 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // ID 19 reserved for TCAL (PR pending)
     // ID 20 reserved for TX_TYPE (PR pending)
     
+/* #FAULT INJECTIOM */
+
+    // @Param: INJECT_ENABLED
+    // @DisplayName: Active fault injection system
+    // @Description: This enables the fault_injection routine on arducopter.cpp. Generate and injects faults on the sensor values based on the params, injection_method and injection_type.
+    // @Values: 0:Stopped,1:Running
+    // @Range: 0.0 1.0
+    // @User: Advanced
+    AP_GROUPINFO("INJECT_ENABLED", 21, ParametersG2, inject_enabled, INJECT_ENABLED_DEFAULT),
+    
+    // @Param: INJ_DELAY_START
+    // @DisplayName: Dealy to start fault injection
+    // @Description: This enables the fault_injection after a certain delay.
+    // @Values: time in ms
+    // @User: Advanced
+    AP_GROUPINFO("INJ_DELAY_START", 22, ParametersG2, delay_to_start, INJ_DELAY_START),
+    
+/* END FAULT INJECTION */
+
+
     AP_GROUPEND
 };
 

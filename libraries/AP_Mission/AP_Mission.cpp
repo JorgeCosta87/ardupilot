@@ -794,6 +794,10 @@ MAV_MISSION_RESULT AP_Mission::mavlink_int_to_mission_cmd(const mavlink_mission_
         cmd.content.set_yaw_speed.relative_angle = packet.param3;   // 0 = absolute angle, 1 = relative angle
         break;
 
+case MAV_CMD_ENB_FAULT_INJECTION:                       //
+        cmd.p1 = packet.param1;                         // fault injection method
+    break;
+
     default:
         // unrecognised command
         return MAV_MISSION_UNSUPPORTED;
@@ -1249,6 +1253,10 @@ bool AP_Mission::mission_cmd_to_mavlink_int(const AP_Mission::Mission_Command& c
         packet.param2 = cmd.content.set_yaw_speed.speed;            // speed in meters/second
         packet.param3 = cmd.content.set_yaw_speed.relative_angle;   // 0 = absolute angle, 1 = relative angle
         break;
+
+    case MAV_CMD_ENB_FAULT_INJECTION :                           // MAV ID: 176
+        packet.param1 = cmd.p1;                         // set flight mode identifier
+    break;
 
     default:
         // unrecognised command

@@ -37,6 +37,8 @@
 #include <AP_InertialSensor/AP_InertialSensor.h>
 #include <AP_InertialSensor/AuxiliaryBus.h>
 
+#include <AP_FaultInjection/AP_FaultInjection.h>
+
 extern const AP_HAL::HAL& hal;
 
 /*
@@ -245,8 +247,24 @@ void AP_Compass_HMC5843::_timer()
     // accumulate more than 8 before a read
     // get raw_field - sensor frame, uncorrected
     Vector3f raw_field = Vector3f(_mag_x, _mag_y, _mag_z);
-    raw_field *= _gain_scale;
+  
     
+   /* #FAULT INJECTION
+     *
+     * previous code:
+     *
+     *   Vector3f raw_field = Vector3f(_mag_x, _mag_y, _mag_z);
+     *
+    */
+
+    if(faultInjection != NULL){
+        faultInjection->manipulate_compass_values(&raw_field);
+    }
+
+    /* END FAULT INJECTION */
+
+    raw_field *= _gain_scale;
+
     // rotate to the desired orientation
     if (is_external(_compass_instance)) {
         raw_field.rotate(ROTATION_YAW_90);

@@ -157,6 +157,16 @@ const AP_Scheduler::Task Copter::scheduler_tasks[] = {
 #endif
     SCHED_TASK(button_update,          5,    100),
     SCHED_TASK(stats_update,           1,    100),
+
+/* #FAULT INJECTION */
+
+#ifdef FAULT_INJECTION
+    SCHED_TASK(runtime_injection,    100,    100),
+#endif
+
+/*END FAIL*/
+
+
 };
 
 
@@ -171,6 +181,10 @@ void Copter::setup()
     StorageManager::set_layout_copter();
 
     init_ardupilot();
+
+#ifdef FAULT_INJECTION
+    fault_injection.init(&compass);
+#endif
 
     // initialise the main loop scheduler
     scheduler.init(&scheduler_tasks[0], ARRAY_SIZE(scheduler_tasks));
@@ -618,5 +632,20 @@ void Copter::update_altitude()
         Log_Write_Control_Tuning();
     }
 }
+
+/* #FAULT INJECTIOM */
+
+void Copter::runtime_injection()
+{
+    if(g2.inject_enabled){
+        fault_injection.start_fault_injection();
+        return;
+    }
+
+
+    fault_injection.stop_fault_injection();
+}
+
+/* END FAULT INJECTIOM */
 
 AP_HAL_MAIN_CALLBACKS(&copter);

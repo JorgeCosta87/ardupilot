@@ -650,3 +650,27 @@
 #ifndef ADVANCED_FAILSAFE
 # define ADVANCED_FAILSAFE DISABLED
 #endif
+
+
+//////////////////////////////////////////////////////////////////////////////
+// #FAULT INJECTION
+//
+#ifdef FAULT_INJECTION
+
+#ifndef INJECT_ENABLED_DEFAULT
+  #define INJECT_ENABLED_DEFAULT 0
+#endif
+
+#ifndef INJECT_METHOD_DEFAULT
+  #define INJECT_METHOD_DEFAULT 0
+#endif
+
+#ifndef INJECT_TYPE_DEFAULT
+  #define INJECT_TYPE_DEFAULT 0
+#endif 
+
+#ifndef INJ_DELAY_START
+  #define INJ_DELAY_START 0
+#endif 
+
+#endif

@@ -160,6 +160,12 @@ bool Copter::start_command(const AP_Mission::Mission_Command& cmd)
         break;
 #endif
 
+#ifdef FAULT_INJECTION
+    case MAV_CMD_ENB_FAULT_INJECTION :
+        fault_injection.start_fault_injection();
+        break;
+#endif
+
     default:
         // do nothing with unrecognized MAVLink messages
         break;
@@ -269,6 +275,7 @@ bool Copter::verify_command(const AP_Mission::Mission_Command& cmd)
     case MAV_CMD_DO_GRIPPER:
     case MAV_CMD_DO_GUIDED_LIMITS:
     case MAV_CMD_DO_FENCE_ENABLE:
+    case MAV_CMD_ENB_FAULT_INJECTION:
         return true;
 
     default:

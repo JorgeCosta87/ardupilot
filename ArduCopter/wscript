@@ -32,6 +32,7 @@ def build(bld):
             'AP_Beacon',
             'AP_Arming',
             'AP_VisualOdom',
+            'AP_FaultInjection',
         ],
     )
 
