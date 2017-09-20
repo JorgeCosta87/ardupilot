@@ -576,8 +576,16 @@ public:
 
 /* #FAULT INJECTIOM */
 
-    AP_Int8  inject_enabled;
-    AP_Int32 delay_to_start;
+    AP_Int8  inj_enabled;
+    AP_Int8  inj_sensors;
+    AP_Int8  inj_method;
+    AP_Int32 inj_delay_to_start;
+    AP_Int32 inj_duration;
+    AP_Vector3f inj_static_values;
+    AP_Float inj_noise_mean;
+    AP_Float inj_noise_std;
+    AP_Float inj_min_value;
+    AP_Float inj_max_value;
 
 /* END FAULT INJECTION */
 

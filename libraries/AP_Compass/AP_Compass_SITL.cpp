@@ -2,6 +2,8 @@
 
 #include <AP_HAL/AP_HAL.h>
 
+#include <AP_FaultInjection/AP_FaultInjection.h>
+
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
 extern const AP_HAL::HAL& hal;
 
@@ -34,6 +36,12 @@ void AP_Compass_SITL::_timer()
     // units are milli-Gauss
     Vector3f noise = rand_vec3f() * _sitl->mag_noise;
     Vector3f new_mag_data = _sitl->state.bodyMagField + noise;
+
+    /* #FAULT INJECTION */
+
+    AP_FaultInjection::manipulate_values(&new_mag_data, SENSOR_COMPASS);
+    
+    /* END FAULT INJECTION */
 
     // add delay
     uint32_t best_time_delta = 1000; // initialise large time representing buffer entry closest to current time - delay.

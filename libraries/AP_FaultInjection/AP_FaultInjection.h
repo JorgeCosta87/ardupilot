@@ -2,8 +2,6 @@
 
 #include <inttypes.h>
 
-#include <stdio.h>
-
 #include <AP_Compass/AP_Compass.h> 
 #include <AP_Common/AP_Common.h>
 #include <AP_HAL/AP_HAL.h>
@@ -11,24 +9,25 @@
 #include <AP_Param/AP_Param.h>
 #include <GCS_MAVLink/GCS_MAVLink.h>
 
- 
+
+#define INFINITE                                0
 
 //Methods
 #define INJECT_STATIC_VALUES                    0
 #define INJECT_RANDOM_VALUES                    1
 #define INJECT_NOISE                            2
 #define INJECT_REPEAT_LAST_KNOWN_VALUE          3
+#define INJECT_DOUBLE                           4
+#define Inject_HALF                             5
+#define INJECT_MAX_VALUE                        6
+#define INJECT_DOUBLE_MAX                       7
+#define INJECT_MIN_VALUE                        8
 
-//type
-#define INJECT_COMPASS                          0
-#define INJECT_BARO                             1
-
+//sensors
 #define SENSOR_COMPASS                          0
 #define SENSOR_GYRO                             1
 #define SENSOR_ACCEL                            2
 #define SENSOR_BARO                             3
-
-class Compass;
 
 class AP_FaultInjection
 {
@@ -36,45 +35,46 @@ class AP_FaultInjection
 public:
 
     AP_FaultInjection(void);
-    AP_FaultInjection(Compass &_compass);
 
-    void init(Compass *compass);
-    void start_fault_injection();
-    void stop_fault_injection();
+    static void start_fault_injection();
+    static void stop_fault_injection();
+    static void loadValues(
+        AP_Int8 inj_sensors, AP_Int8 inj_method,
+        AP_Int32 inj_delay_to_start,
+        AP_Int32 inj_duration, AP_Vector3f static_values,
+        AP_Float inj_noise_mean, AP_Float inj_noise_std,
+        AP_Float inj_min_value, AP_Float inj_max_value);
 
-    //compass
-    void manipulate_compass_values(Vector3f *rawField);
+    static void checkState(AP_Int8 inj_enabled, bool armed);
+    static void update();
+
+    static void manipulate_values(Vector3f *rawField, uint8_t sens);
 
 
-    //Utils (move to another lib)
-    float random_float(float min, float max);
-    void gaussian_noise(Vector3f *rawField, float mean, float std);
+    static float random_float(float min, float max);
+    static void gaussian_noise(Vector3f *rawField, float mean, float std);
+
+    static bool isEnableFaultInjection;
+    static bool isRunningFaultInjection;
 
     static const struct AP_Param::GroupInfo var_info[];
+    static bool     readLastValue;
+    static Vector3f last_value;
 
-private:
+    static bool isArmed;
+    static bool onStart;
+    static uint32_t delay;
+    static uint32_t duration;
+    static uint64_t time_to_start;
+    static uint64_t time_to_stop;
 
-    bool _isRunning_compass_faultIjection = false;
-    Compass *_compass;
+    static int8_t         sensors;
+    static int8_t         method;
 
-    uint64_t time_to_start;
-    uint64_t time_to_stop;
+    static Vector3f static_rawField;
+    static float    noise_mean;
+    static float    noise_std;
+    static float    max_value;
+    static float    min_value;
 
-
-    AP_Int8         _type;
-    AP_Int8         _comp_method;
-
-
-    //compass values
-    AP_Vector3f    _comp_static_rawField;
-    AP_Float       _comp_noise_mean;
-    AP_Float       _comp_noise_std;
-    AP_Vector3f    _comp_min_mag;
-    AP_Vector3f    _comp_max_mag;
-
-    bool           _comp_readLastValue = false;
-    Vector3f       _comp_last_value;
-
-
-    void set_compass(Compass  *compass) {_compass = compass;}
 };

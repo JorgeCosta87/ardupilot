@@ -1,4 +1,5 @@
 #include <random>
+#include <stdio.h>
 
 #include <AP_HAL/AP_HAL.h>
 
@@ -6,168 +7,211 @@
 
 extern AP_HAL::HAL& hal;
 
-const AP_Param::GroupInfo AP_FaultInjection::var_info[] = {
+bool AP_FaultInjection::isEnableFaultInjection = false;
+bool AP_FaultInjection::isRunningFaultInjection = false;
 
-    // @Param: INJ_TYPE
-    // @DisplayName: Sensors to apply fault injection
-    // @Description: Used to choose the sensors that will be applied the fault injection
-    // @Values: 0:compass,1:barometer
-    // @User: Advancedbbbb
-    AP_GROUPINFO("TYPE", 1, AP_FaultInjection, _type, INJECT_COMPASS),    
+int8_t AP_FaultInjection::sensors = 0;
+int8_t AP_FaultInjection::method = 0;
+bool AP_FaultInjection::onStart = false;
+bool AP_FaultInjection::isArmed = false;
+uint32_t AP_FaultInjection::delay = 0;
+uint32_t AP_FaultInjection::duration = 0;;
 
-    // @Param: INJ_METHOD
-    // @DisplayName: Method to apply the fault injection
-    // @Description: Fail injection allow differents ways to generate errors on the sensors, static values, noise over the sensor values, random values(min max) and repeat the last known value.
-    // @Values: 0:static_values,1:random_values,2:noise,3:repeat_last_known_value
-    // @Range: 0 1
-    // @Increment: 1
-    // @User: Advanced
-    AP_GROUPINFO("METHOD", 2, AP_FaultInjection, _comp_method, INJECT_STATIC_VALUES),
+float AP_FaultInjection::noise_mean = 0;
+float AP_FaultInjection::noise_std = 0;
+Vector3f AP_FaultInjection::static_rawField;
+float AP_FaultInjection::min_value;
+float AP_FaultInjection::max_value;
 
-//*************************************COMPASS PARAMS**************************
+bool AP_FaultInjection::readLastValue = false;
+Vector3f AP_FaultInjection::last_value;
 
-    // @Param: INJ_COMP_FIELD
-    // @DisplayName: 
-    // @Description:
-    // @Values: Vector3f
-    // @Range: 
-    // @Increment: 
-    // @User: Advanced
-    AP_GROUPINFO("COMP_FIELD", 3, AP_FaultInjection, _comp_static_rawField, 0),
-    
-    // @Param: COMP_NOISE_U
-    // @DisplayName: Mean
-    // @Description:
-    // @Values: Vector3f
-    // @Range: 
-    // @Increment: 
-    // @User: Advanced
-    AP_GROUPINFO("COMP_NOISE_M", 4, AP_FaultInjection, _comp_noise_mean, 0),
-
-    // @Param: COMP_NOi_D
-    // @DisplayName: standard deviation
-    // @Description:
-    // @Values: Vector3f
-    // @Range: 
-    // @Increment: 
-    // @User: Advanced
-    AP_GROUPINFO("COMP_NOiSE_D", 5, AP_FaultInjection, _comp_noise_std, 1),
-
-    // @Param: INJ_COMP_MINX
-    // @DisplayName: 
-    // @Description:
-    // @Values: Vector3f
-    // @Range: 
-    // @Increment: 
-    // @User: Advanced
-    AP_GROUPINFO("COMP_MIN", 6, AP_FaultInjection, _comp_min_mag, 0),
-    
-    // @Param: INJ_COMP_MAX
-    // @DisplayName: 
-    // @Description:
-    // @Values: Vector3f
-    // @Range: 
-    // @Increment: 
-    // @User: Advanced
-    AP_GROUPINFO("COMP_MAX", 7, AP_FaultInjection, _comp_max_mag, 1000),
-        
-    
-    AP_GROUPEND
-};
 
 AP_FaultInjection::AP_FaultInjection(void)
 {
-    AP_Param::setup_object_defaults(this, var_info);
-    this->_compass = nullptr;
-    _comp_last_value.zero();
 }
 
-void AP_FaultInjection::init(Compass *compass){
-    set_compass(compass);
 
-    for (uint8_t i=0; i< compass->get_backends_count(); i++) {
-        compass->get_backends()[i]->set_faultInjection(this);
-    }
-}
 
 
 void AP_FaultInjection::start_fault_injection(){
 
-    if(_isRunning_compass_faultIjection){
-        //time_to_start = g2.delay_to_start + AP_HAL::millis();
+    if(!isEnableFaultInjection){
         return;
     }
 
- //   if(AP_HAL::millis() < time_to_start){
- //       return;
- //   }
+    isRunningFaultInjection = true;
+    readLastValue = false;
+    last_value.zero();
+}
 
-    _comp_readLastValue = false;
-    _comp_last_value.zero();
+void AP_FaultInjection::checkState(AP_Int8 inj_enabled, bool armed)
+{
+    isEnableFaultInjection = inj_enabled;
+    isArmed = armed;
+}
 
-    switch(_type){
-        
-        case INJECT_COMPASS:
-            _isRunning_compass_faultIjection = true;
-            break;
-            
-        case INJECT_BARO:
+void AP_FaultInjection::loadValues(
+    AP_Int8 inj_sensors, AP_Int8 inj_method,
+    AP_Int32 inj_delay_to_start, AP_Int32 inj_duration, AP_Vector3f static_values,
+    AP_Float inj_noise_mean, AP_Float inj_noise_std,
+    AP_Float inj_min_value, AP_Float inj_max_value)
+{
+    //load values
+    sensors = inj_sensors;
+    method = inj_method;
 
-            break;
+    delay = inj_delay_to_start;
+    duration = inj_duration;
 
+    static_rawField = static_values;
+    noise_mean = inj_noise_mean;
+    noise_std = inj_noise_std;
+    min_value = inj_min_value;
+    max_value = inj_max_value;
+
+/*
+    printf("update:"
+    "\n\t enabled: %d"
+    "\n\t sensors: %d"
+    "\n\t method: %d"
+    "\n\t delay : %d"
+    "\n\t duration : %d"
+    "\n\t static_rawField x: %.2f - y: %.2f - z: %.2f"
+    "\n\t noise_mean : %.2f"
+    "\n\t noise_std : %.2f"
+    "\n\t min_value : %.2f"
+    "\n\t max_value : %.2f"
+    "\n",
+     isEnableFaultInjection, sensors, method,
+     delay, duration, 
+     static_rawField.x, static_rawField.y, static_rawField.z,
+     noise_mean, noise_std, min_value, max_value
+    );
+*/
+}
+
+void AP_FaultInjection::update()
+{
+    if(isEnableFaultInjection)
+    {
+        if(isArmed || onStart){
+            if(!isRunningFaultInjection)
+            {
+                delay += AP_HAL::millis();
+                start_fault_injection();
+                printf("\nstart FAULT!\n");
+            }
+            }
+        else if(isRunningFaultInjection){
+            if(AP_HAL::millis() > (delay + duration) && duration != INFINITE)
+            {
+                stop_fault_injection();
+                printf("\nSTOP FAULT!\n");
+                
+            }
+        }   
+    }else{
+        AP_FaultInjection::stop_fault_injection();
     }
 }
 
 void AP_FaultInjection::stop_fault_injection(){
     
-        _isRunning_compass_faultIjection = false;
-        _comp_readLastValue = false;
-        _comp_last_value.zero();
+    isRunningFaultInjection = false;
+    readLastValue = false;
+    last_value.zero();
 }
 
-void AP_FaultInjection::manipulate_compass_values(Vector3f *rawField){
+void AP_FaultInjection::manipulate_values(Vector3f *rawField, uint8_t sens){
 
-
-    if(!_isRunning_compass_faultIjection){
+    if(!isEnableFaultInjection){
        return;
     }
 
-    switch(_comp_method)
-    {
-        case INJECT_STATIC_VALUES : {
-            const Vector3f aux = _comp_static_rawField.get();
-            rawField->x = aux.x;
-            rawField->y = aux.y;
-            rawField->z = aux.z;
-            break;
-        }
-        case INJECT_RANDOM_VALUES : {
-            const Vector3f min = _comp_min_mag.get();
-            const Vector3f max = _comp_max_mag.get();
-            rawField->x = random_float(min.x, max.x);
-            rawField->y = random_float(min.y, max.y);
-            rawField->z = random_float(min.z, max.z);
-            break;
-        }
-        case INJECT_NOISE : {
-            gaussian_noise(rawField, _comp_noise_mean, _comp_noise_std);
-            break;
-        }
-        case INJECT_REPEAT_LAST_KNOWN_VALUE : {
-             if(!_comp_readLastValue){
-                 _comp_last_value.x = rawField->x;
-                 _comp_last_value.y = rawField->y;
-                 _comp_last_value.z = rawField->z;
-
-                 _comp_readLastValue = true;
-             }
-             rawField->x = _comp_last_value.x; 
-             rawField->y = _comp_last_value.y;
-             rawField->z = _comp_last_value.z;
-            break;
-        }
+    if(sens != sensors){
+        return;
     }
 
+    if(isRunningFaultInjection)
+    {
+        if(((AP_HAL::millis() >= delay) && (AP_HAL::millis() < (delay + duration)))|| (duration == INFINITE))
+        {
+            printf("before:\n  x: %.4f\n  y: %.4f\n  z: %.4f\n",rawField->x,rawField->y,rawField->z);
+            switch(method)
+            {
+                case INJECT_STATIC_VALUES : {
+                    rawField->x = static_rawField.x;
+                    rawField->y = static_rawField.y;
+                    rawField->z = static_rawField.z;
+                    break;
+                }
+
+                case INJECT_RANDOM_VALUES : {
+                    rawField->x = random_float(min_value, max_value);
+                    rawField->y = random_float(min_value, max_value);
+                    rawField->z = random_float(min_value, max_value);
+                    break;
+                }
+
+                case INJECT_NOISE : {
+                    gaussian_noise(rawField, noise_mean, noise_std);
+                    break;
+                }
+
+                case INJECT_REPEAT_LAST_KNOWN_VALUE : {
+                    if(!readLastValue){
+                        last_value.x = rawField->x;
+                        last_value.y = rawField->y;
+                        last_value.z = rawField->z;
+
+                        readLastValue = true;
+                    }
+                    rawField->x = last_value.x; 
+                    rawField->y = last_value.y;
+                    rawField->z = last_value.z;
+                    break;
+                }
+
+                case INJECT_DOUBLE : {
+                    rawField->x = rawField->x * 2;
+                    rawField->y = rawField->y * 2;
+                    rawField->z = rawField->z * 2;
+
+                    break;
+                }
+
+                case Inject_HALF : {
+                    rawField->x = rawField->x / 2;
+                    rawField->y = rawField->y / 2;
+                    rawField->z = rawField->z / 2;
+                    break;
+                }
+
+                case INJECT_MAX_VALUE : {
+                    rawField->x = max_value;
+                    rawField->y = max_value;
+                    rawField->z = max_value;
+                    break;
+                }
+                
+                case INJECT_DOUBLE_MAX : {
+                    rawField->x = max_value * 2;
+                    rawField->y = max_value * 2;
+                    rawField->z = max_value * 2;
+                    break;
+                }
+                case INJECT_MIN_VALUE : {
+                    rawField->x = min_value * 2;
+                    rawField->y = min_value * 2;
+                    rawField->z = min_value * 2;
+                    break;
+                }
+            }
+
+            printf("\nafter:\n  x: %.4f\n  y: %.4f\n  z: %.4f\n",rawField->x,rawField->y,rawField->z);
+        } 
+    }
 }
 
 

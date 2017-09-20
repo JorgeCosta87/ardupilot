@@ -182,10 +182,6 @@ void Copter::setup()
 
     init_ardupilot();
 
-#ifdef FAULT_INJECTION
-    fault_injection.init(&compass);
-#endif
-
     // initialise the main loop scheduler
     scheduler.init(&scheduler_tasks[0], ARRAY_SIZE(scheduler_tasks));
 
@@ -637,13 +633,22 @@ void Copter::update_altitude()
 
 void Copter::runtime_injection()
 {
-    if(g2.inject_enabled){
-        fault_injection.start_fault_injection();
-        return;
+    AP_FaultInjection::checkState(g2.inj_enabled, motors->armed());
+
+    if(!motors->armed()){
+        AP_FaultInjection::loadValues(
+        g2.inj_sensors,
+        g2.inj_method,
+        g2.inj_delay_to_start,
+        g2.inj_duration,
+        g2.inj_static_values,
+        g2.inj_noise_mean,
+        g2.inj_noise_std,
+        g2.inj_min_value,
+        g2.inj_max_value);
     }
 
-
-    fault_injection.stop_fault_injection();
+    AP_FaultInjection::update();
 }
 
 /* END FAULT INJECTIOM */

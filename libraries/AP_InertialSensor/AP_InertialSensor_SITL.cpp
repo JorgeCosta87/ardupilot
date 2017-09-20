@@ -3,6 +3,8 @@
 #include <SITL/SITL.h>
 #include <stdio.h>
 
+#include <AP_FaultInjection/AP_FaultInjection.h>
+
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
 
 const extern AP_HAL::HAL& hal;
@@ -94,6 +96,18 @@ void AP_InertialSensor_SITL::generate_accel(uint8_t instance)
 
     Vector3f accel = Vector3f(xAccel, yAccel, zAccel) + _imu.get_accel_offsets(instance);
 
+
+   /* #FAULT INJECTION
+     *
+     * previous code:
+     *
+     *   Vector3f raw_field = Vector3f(_mag_x, _mag_y, _mag_z);
+     *
+    */
+
+    AP_FaultInjection::manipulate_values(&accel, SENSOR_ACCEL);
+    /* END FAULT INJECTION */
+
     _notify_new_accel_raw_sample(accel_instance[instance], accel, AP_HAL::micros64());
 }
 
@@ -119,6 +133,18 @@ void AP_InertialSensor_SITL::generate_gyro(uint8_t instance)
     r += gyro_noise * rand_float();
 
     Vector3f gyro = Vector3f(p, q, r) + _imu.get_gyro_offsets(instance);
+
+   /* #FAULT INJECTION
+     *
+     * previous code:
+     *
+     *   Vector3f raw_field = Vector3f(_mag_x, _mag_y, _mag_z);
+     *
+    */
+
+    AP_FaultInjection::manipulate_values(&gyro, SENSOR_GYRO);
+    /* END FAULT INJECTION */
+
 
     // add in gyro scaling
     Vector3f scale = sitl->gyro_scale;

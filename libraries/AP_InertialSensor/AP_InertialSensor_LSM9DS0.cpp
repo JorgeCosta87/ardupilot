@@ -21,6 +21,8 @@
 
 #include <AP_HAL_Linux/GPIO.h>
 
+#include <AP_FaultInjection/AP_FaultInjection.h>
+
 extern const AP_HAL::HAL &hal;
 
 #if CONFIG_HAL_BOARD_SUBTYPE == HAL_BOARD_SUBTYPE_LINUX_RASPILOT
@@ -760,7 +762,20 @@ void AP_InertialSensor_LSM9DS0::_read_data_transaction_g()
         return;
     }
 
+    /* #FAULT INJECTION
+     *
+     * previous code:
+     *
+     *    Vector3f gyro_data(raw_data.x, -raw_data.y, -raw_data.z);
+     *
+    */
+
     Vector3f gyro_data(raw_data.x, -raw_data.y, -raw_data.z);
+    
+    AP_FaultInjection::manipulate_values(&gyro_data, SENSOR_GYRO);
+
+    /* END FAULT INJECTION */
+
 
     gyro_data *= _gyro_scale;
 

@@ -162,7 +162,7 @@ bool Copter::start_command(const AP_Mission::Mission_Command& cmd)
 
 #ifdef FAULT_INJECTION
     case MAV_CMD_ENB_FAULT_INJECTION :
-        fault_injection.start_fault_injection();
+        //fault_injection.start_fault_injection();
         break;
 #endif
 

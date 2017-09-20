@@ -25,6 +25,8 @@
 
 #include "AP_InertialSensor_Invensense.h"
 
+#include <AP_FaultInjection/AP_FaultInjection.h>
+
 extern const AP_HAL::HAL& hal;
 
 #if CONFIG_HAL_BOARD == HAL_BOARD_LINUX
@@ -574,6 +576,13 @@ bool AP_InertialSensor_Invensense::_accumulate(uint8_t *samples, uint8_t n_sampl
                          -int16_val(data, 2));
         accel *= _accel_scale;
 
+
+/* #FAULT INJECTION */
+
+        AP_FaultInjection::manipulate_values(&accel, SENSOR_ACCEL);
+
+/* END FAULT INJECTION */
+
         int16_t t2 = int16_val(data, 3);
         if (!_check_raw_temp(t2)) {
             debug("temp reset %d %d", _raw_temp, t2);
@@ -585,6 +594,14 @@ bool AP_InertialSensor_Invensense::_accumulate(uint8_t *samples, uint8_t n_sampl
         gyro = Vector3f(int16_val(data, 5),
                         int16_val(data, 4),
                         -int16_val(data, 6));
+
+
+/* #FAULT INJECTION */
+
+        AP_FaultInjection::manipulate_values(&gyro, SENSOR_GYRO);
+
+/* END FAULT INJECTION */
+
         gyro *= GYRO_SCALE;
 
         _rotate_and_correct_accel(_accel_instance, accel);

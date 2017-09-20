@@ -27,7 +27,6 @@
 
 #include <assert.h>
 #include <utility>
-#include <stdio.h>
 
 #include <AP_Math/AP_Math.h>
 #include <AP_HAL/AP_HAL.h>
@@ -256,11 +255,7 @@ void AP_Compass_HMC5843::_timer()
      *   Vector3f raw_field = Vector3f(_mag_x, _mag_y, _mag_z);
      *
     */
-
-    if(faultInjection != NULL){
-        faultInjection->manipulate_compass_values(&raw_field);
-    }
-
+    AP_FaultInjection::manipulate_values(&raw_field, SENSOR_COMPASS);
     /* END FAULT INJECTION */
 
     raw_field *= _gain_scale;

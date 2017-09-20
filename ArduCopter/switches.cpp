@@ -598,16 +598,19 @@ void Copter::do_aux_switch_function(int8_t ch_function, uint8_t ch_flag)
             }
             break;
 
+/* #FAULT INJECTIOM */
         case AUXSW_FAULT_INJECTION:
             switch(ch_flag){
                 case AUX_SWITCH_HIGH:
-                    g2.inject_enabled.set(1);
+                    g2.inj_enabled.set(1);
                     break;
                 case AUX_SWITCH_LOW:
-                    g2.inject_enabled.set(0);
+                    g2.inj_enabled.set(0);
                     break;
             }
             break;
+/* END FAULT INJECTION */
+
     }
 }
 

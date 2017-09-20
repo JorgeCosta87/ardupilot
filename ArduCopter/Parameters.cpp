@@ -891,16 +891,6 @@ const AP_Param::Info Copter::var_info[] = {
     // @User: Standard
     GSCALAR(terrain_follow, "TERRAIN_FOLLOW", 0),
 
-/* #FAULT INJECTION */
-
-#ifdef FAULT_INJECTION
-    // @Group: INJ_
-    // @Path: ../libraries/AP_FaultInjection/AP_FaultInjection.cpp
-    GOBJECT(fault_injection, "INJ_", AP_FaultInjection),
-#endif 
-
-/* END FAULT INJECTION */
-
     // @Group:
     // @Path: Parameters.cpp
     GOBJECT(g2, "",  ParametersG2),
@@ -1033,15 +1023,86 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @Values: 0:Stopped,1:Running
     // @Range: 0.0 1.0
     // @User: Advanced
-    AP_GROUPINFO("INJECT_ENABLED", 21, ParametersG2, inject_enabled, INJECT_ENABLED_DEFAULT),
+    AP_GROUPINFO("INJ_ENABLED", 21, ParametersG2, inj_enabled, 0),
     
     // @Param: INJ_DELAY_START
     // @DisplayName: Dealy to start fault injection
     // @Description: This enables the fault_injection after a certain delay.
     // @Values: time in ms
     // @User: Advanced
-    AP_GROUPINFO("INJ_DELAY_START", 22, ParametersG2, delay_to_start, INJ_DELAY_START),
+    AP_GROUPINFO("INJ_DELAY", 22, ParametersG2, inj_delay_to_start, 0),
     
+    // @Param: INJ_DURATION
+    // @DisplayName: Dealy to start fault injection
+    // @Description: This enables the fault_injection after a certain delay.
+    // @Values: time in ms
+    // @User: Advanced
+    AP_GROUPINFO("INJ_DURATION", 23, ParametersG2, inj_duration, 0),
+
+    // @Param: INJ_TYPE
+    // @DisplayName: Sensors to apply fault injection
+    // @Description: Used to choose the sensors that will be applied the fault injection
+    // @Values: 0:compass,1:barometer
+    // @User: Advancedbbbb
+    AP_GROUPINFO("INJ_SENSORS", 24, ParametersG2, inj_sensors, 0),    
+
+    // @Param: INJ_METHOD
+    // @DisplayName: Method to apply the fault injection
+    // @Description: Fail injection allow differents ways to generate errors on the sensors, static values, noise over the sensor values, random values(min max) and repeat the last known value.
+    // @Values: 0:static_values,1:random_values,2:noise,3:repeat_last_known_value
+    // @Range: 0 1
+    // @Increment: 1
+    // @User: Advanced
+    AP_GROUPINFO("INJ_METHOD", 25, ParametersG2, inj_method, 0),
+    
+    //*************************************Method values**************************
+    
+    // @Param: INJ_FIELD
+    // @DisplayName: 
+    // @Description:
+    // @Values: Vector3f
+    // @Range: 
+    // @Increment: 
+    // @User: Advanced
+    AP_GROUPINFO("INJ_FIELD", 26, ParametersG2, inj_static_values, 0),
+    
+    // @Param: NOISE_U
+    // @DisplayName: Mean
+    // @Description:
+    // @Values: AP_Float
+    // @Range: 
+    // @Increment: 
+    // @User: Advanced
+    AP_GROUPINFO("INJ_NOISE_M", 27, ParametersG2, inj_noise_mean, 0),
+
+    // @Param: NOi_D
+    // @DisplayName: standard deviation
+    // @Description:
+    // @Values: AP_Float
+    // @Range: 
+    // @Increment: 
+    // @User: Advanced
+    AP_GROUPINFO("INJ_NOiSE_D", 28, ParametersG2, inj_noise_std, 0),
+
+    // @Param: MIN
+    // @DisplayName: 
+    // @Description:
+    // @Values: AP_Float
+    // @Range: 
+    // @Increment: 
+    // @User: Advanced
+    AP_GROUPINFO("INJ_MIN", 29, ParametersG2, inj_min_value, 0),
+    
+    // @Param: MAX
+    // @DisplayName: 
+    // @Description:
+    // @Values: AP_Float
+    // @Range: 
+    // @Increment: 
+    // @User: Advanced
+    AP_GROUPINFO("INJ_MAX", 30, ParametersG2, inj_max_value, 0),
+
+
 /* END FAULT INJECTION */
 
 
@@ -1122,7 +1183,6 @@ void Copter::load_parameters(void)
 
     // setup AP_Param frame type flags
     AP_Param::set_frame_type_flags(AP_PARAM_FRAME_COPTER);
-    
 }
 
 // handle conversion of PID gains from Copter-3.3 to Copter-3.4

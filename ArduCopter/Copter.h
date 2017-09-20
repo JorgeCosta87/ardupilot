@@ -1162,7 +1162,6 @@ private:
 
     /* #FAULT INJECTION */
 
-    AP_FaultInjection fault_injection;
     void runtime_injection(void);
 
     /* END FAULT INJECTION */
