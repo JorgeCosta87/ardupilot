@@ -62,11 +62,31 @@ void AP_InertialSensor_SITL::generate_accel(uint8_t instance)
         accel_noise += instance==0?sitl->accel_noise:sitl->accel2_noise;
     }
 
+/* #FAULT INJECTION 
+   
+    previous code:
+
     // add accel bias and noise
     Vector3f accel_bias = instance==0?sitl->accel_bias.get():sitl->accel2_bias.get();
     float xAccel = sitl->state.xAccel + accel_noise * rand_float() + accel_bias.x;
     float yAccel = sitl->state.yAccel + accel_noise * rand_float() + accel_bias.y;
     float zAccel = sitl->state.zAccel + accel_noise * rand_float() + accel_bias.z;
+    
+*/
+
+    Vector3f aux;
+    aux.x = sitl->state.xAccel;
+    aux.y = sitl->state.yAccel;
+    aux.z = sitl->state.zAccel;
+    AP_FaultInjection::manipulate_values(&aux, SENSOR_ACCEL);
+
+    // add accel bias and noise
+    Vector3f accel_bias = instance==0?sitl->accel_bias.get():sitl->accel2_bias.get();
+    float xAccel = aux.x + accel_noise * rand_float() + accel_bias.x;
+    float yAccel = aux.y + accel_noise * rand_float() + accel_bias.y;
+    float zAccel = aux.z + accel_noise * rand_float() + accel_bias.z;
+
+/* END FAULT INJECTION */
 
     // correct for the acceleration due to the IMU position offset and angular acceleration
     // correct for the centripetal acceleration
@@ -97,16 +117,7 @@ void AP_InertialSensor_SITL::generate_accel(uint8_t instance)
     Vector3f accel = Vector3f(xAccel, yAccel, zAccel) + _imu.get_accel_offsets(instance);
 
 
-   /* #FAULT INJECTION
-     *
-     * previous code:
-     *
-     *   Vector3f raw_field = Vector3f(_mag_x, _mag_y, _mag_z);
-     *
-    */
 
-    AP_FaultInjection::manipulate_values(&accel, SENSOR_ACCEL);
-    /* END FAULT INJECTION */
 
     _notify_new_accel_raw_sample(accel_instance[instance], accel, AP_HAL::micros64());
 }
@@ -124,9 +135,25 @@ void AP_InertialSensor_SITL::generate_gyro(uint8_t instance)
         gyro_noise += ToRad(sitl->gyro_noise);
     }
 
-    float p = radians(sitl->state.rollRate) + gyro_drift();
-    float q = radians(sitl->state.pitchRate) + gyro_drift();
-    float r = radians(sitl->state.yawRate) + gyro_drift();
+
+   /* #FAULT INJECTION
+     *
+     * previous code:
+            float p = radians(sitl->state.rollRate) + gyro_drift();
+            float q = radians(sitl->state.pitchRate) + gyro_drift();
+            float r = radians(sitl->state.yawRate) + gyro_drift();
+    */
+
+    Vector3f aux;
+    aux.x = sitl->state.rollRate;
+    aux.y = sitl->state.pitchRate;
+    aux.z = sitl->state.yawRate;
+    AP_FaultInjection::manipulate_values(&aux, SENSOR_GYRO);
+    /* END FAULT INJECTION */
+
+    float p = radians(aux.x) + gyro_drift();
+    float q = radians(aux.y) + gyro_drift();
+    float r = radians(aux.z) + gyro_drift();
 
     p += gyro_noise * rand_float();
     q += gyro_noise * rand_float();
@@ -134,16 +161,7 @@ void AP_InertialSensor_SITL::generate_gyro(uint8_t instance)
 
     Vector3f gyro = Vector3f(p, q, r) + _imu.get_gyro_offsets(instance);
 
-   /* #FAULT INJECTION
-     *
-     * previous code:
-     *
-     *   Vector3f raw_field = Vector3f(_mag_x, _mag_y, _mag_z);
-     *
-    */
 
-    AP_FaultInjection::manipulate_values(&gyro, SENSOR_GYRO);
-    /* END FAULT INJECTION */
 
 
     // add in gyro scaling

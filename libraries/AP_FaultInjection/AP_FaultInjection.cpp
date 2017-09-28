@@ -174,17 +174,17 @@ void AP_FaultInjection::manipulate_values(Vector3f *rawField, uint8_t sens){
                 }
 
                 case INJECT_DOUBLE : {
-                    rawField->x = rawField->x * 2;
-                    rawField->y = rawField->y * 2;
-                    rawField->z = rawField->z * 2;
+                    rawField->x = rawField->x * 2.0;
+                    rawField->y = rawField->y * 2.0;
+                    rawField->z = rawField->z * 2.0;
 
                     break;
                 }
 
                 case Inject_HALF : {
-                    rawField->x = rawField->x / 2;
-                    rawField->y = rawField->y / 2;
-                    rawField->z = rawField->z / 2;
+                    rawField->x = rawField->x / 2.0;
+                    rawField->y = rawField->y / 2.0;
+                    rawField->z = rawField->z / 2.0;
                     break;
                 }
 
@@ -196,15 +196,15 @@ void AP_FaultInjection::manipulate_values(Vector3f *rawField, uint8_t sens){
                 }
                 
                 case INJECT_DOUBLE_MAX : {
-                    rawField->x = max_value * 2;
-                    rawField->y = max_value * 2;
-                    rawField->z = max_value * 2;
+                    rawField->x = max_value * 2.0;
+                    rawField->y = max_value * 2.0;
+                    rawField->z = max_value * 2.0;
                     break;
                 }
                 case INJECT_MIN_VALUE : {
-                    rawField->x = min_value * 2;
-                    rawField->y = min_value * 2;
-                    rawField->z = min_value * 2;
+                    rawField->x = min_value * 2.0;
+                    rawField->y = min_value * 2.0;
+                    rawField->z = min_value * 2.0;
                     break;
                 }
             }
@@ -214,7 +214,78 @@ void AP_FaultInjection::manipulate_values(Vector3f *rawField, uint8_t sens){
     }
 }
 
-
+void AP_FaultInjection::manipulate_single_Value(float *value, uint8_t sens){
+    
+        if(!isEnableFaultInjection){
+           return;
+        }
+    
+        if(sens != sensors){
+            return;
+        }
+    
+        if(isRunningFaultInjection)
+        {
+            if(((AP_HAL::millis() >= delay) && (AP_HAL::millis() < (delay + duration))) || (duration == INFINITE))
+            {
+                printf("\nbefore:\n value: %.4f\n",*value);
+                switch(method)
+                {
+                    case INJECT_STATIC_VALUES : {
+                        *value = static_rawField.x;
+                        break;
+                    }
+    
+                    case INJECT_RANDOM_VALUES : {
+                        *value = random_float(min_value, max_value);
+                        break;
+                    }
+    
+                    case INJECT_NOISE : {
+                        //gaussian_noise(rawField, noise_mean, noise_std);
+                        break;
+                    }
+    
+                    case INJECT_REPEAT_LAST_KNOWN_VALUE : {
+                        if(!readLastValue){
+                            last_value.x = *value;
+    
+                            readLastValue = true;
+                        }
+                        *value = last_value.x; 
+                        break;
+                    }
+    
+                    case INJECT_DOUBLE : {
+                        *value = *value * 2.0f;
+                        break;
+                    }
+    
+                    case Inject_HALF : {
+                        *value = *value / 2.0f;
+                        break;
+                    }
+    
+                    case INJECT_MAX_VALUE : {
+                        *value = max_value;
+                        break;
+                    }
+                    
+                    case INJECT_DOUBLE_MAX : {
+                        *value = max_value * 2.0f;
+                        break;
+                    }
+                    case INJECT_MIN_VALUE : {
+                        *value = min_value * 2.0f;
+                        break;
+                    }
+                }
+    
+                printf("\nafter:\n value: %.4f\n",*value);
+            } 
+        }
+    }
+    
 
 //************************************UTILS******************************
 

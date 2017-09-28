@@ -2,7 +2,9 @@
 
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
 
+#include <AP_FaultInjection/AP_FaultInjection.h>
 #include "AP_Baro_SITL.h"
+
 
 extern const AP_HAL::HAL& hal;
 
@@ -49,6 +51,12 @@ void AP_Baro_SITL::_timer()
     _last_sample_time = now;
 
     float sim_alt = _sitl->state.altitude;
+
+/* #FAULT INJECTION */
+
+    AP_FaultInjection::manipulate_single_Value(&sim_alt, SENSOR_BARO);
+
+/* END FAULT INJECTION */
 
     if (_sitl->baro_disable) {
         // barometer is disabled
@@ -100,6 +108,12 @@ void AP_Baro_SITL::_timer()
     AP_Baro::SimpleAtmosphere(sim_alt * 0.001f, sigma, delta, theta);
     float p = p0 * delta;
     float T = 303.16f * theta - 273.16f;  // Assume 30 degrees at sea level - converted to degrees Kelvin
+
+/* #FAULT INJECTION */
+
+    AP_FaultInjection::manipulate_single_Value(&T, SENSOR_TEMP);
+
+/* END FAULT INJECTION */
 
     temperature_adjustment(p, T);
 

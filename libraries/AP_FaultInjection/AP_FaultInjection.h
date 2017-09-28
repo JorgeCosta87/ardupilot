@@ -28,6 +28,7 @@
 #define SENSOR_GYRO                             1
 #define SENSOR_ACCEL                            2
 #define SENSOR_BARO                             3
+#define SENSOR_TEMP                             4
 
 class AP_FaultInjection
 {
@@ -49,6 +50,7 @@ public:
     static void update();
 
     static void manipulate_values(Vector3f *rawField, uint8_t sens);
+    static void manipulate_single_Value(float *value, uint8_t sens);
 
 
     static float random_float(float min, float max);
