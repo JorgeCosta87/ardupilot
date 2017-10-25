@@ -18,7 +18,7 @@
 #define INJECT_NOISE                            2
 #define INJECT_REPEAT_LAST_KNOWN_VALUE          3
 #define INJECT_DOUBLE                           4
-#define Inject_HALF                             5
+#define INJECT_HALF                             5
 #define INJECT_MAX_VALUE                        6
 #define INJECT_DOUBLE_MAX                       7
 #define INJECT_MIN_VALUE                        8
@@ -41,11 +41,14 @@ public:
     static void stop_fault_injection();
     static void loadValues(
         AP_Int8 inj_sensors, AP_Int8 inj_method,
-        AP_Int32 inj_delay_to_start,
-        AP_Int32 inj_duration, AP_Vector3f static_values,
+        AP_Int32 inj_delay_to_start, AP_Int8  inj_wp_trigger,
+        AP_Int32 inj_duration, AP_Float static_valueX,
+        AP_Float static_valueY, AP_Float static_valueZ,
         AP_Float inj_noise_mean, AP_Float inj_noise_std,
         AP_Float inj_min_value, AP_Float inj_max_value);
 
+    static void incrementWaypoit();
+    static void resetWaypoitCount();
     static void checkState(AP_Int8 inj_enabled, bool armed);
     static void update();
 
@@ -65,6 +68,8 @@ public:
 
     static bool isArmed;
     static bool onStart;
+    static int8_t countWP;
+    static int8_t wp_trigger;
     static uint32_t delay;
     static uint32_t duration;
     static uint64_t time_to_start;

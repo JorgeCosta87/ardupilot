@@ -159,13 +159,13 @@ bool Copter::start_command(const AP_Mission::Mission_Command& cmd)
         do_guided_limits(cmd);
         break;
 #endif
-
+/*
 #ifdef FAULT_INJECTION
     case MAV_CMD_ENB_FAULT_INJECTION :
         //fault_injection.start_fault_injection();
         break;
 #endif
-
+*/
     default:
         // do nothing with unrecognized MAVLink messages
         break;
@@ -189,6 +189,10 @@ bool Copter::verify_command_callback(const AP_Mission::Mission_Command& cmd)
         // send message to GCS
         if (cmd_complete) {
             gcs().send_mission_item_reached_message(cmd.index);
+
+            AP_FaultInjection::incrementWaypoit();
+            cliSerial = hal.console;
+            cliSerial->printf("WP: %d", cmd.index);
         }
 
         return cmd_complete;
@@ -275,7 +279,7 @@ bool Copter::verify_command(const AP_Mission::Mission_Command& cmd)
     case MAV_CMD_DO_GRIPPER:
     case MAV_CMD_DO_GUIDED_LIMITS:
     case MAV_CMD_DO_FENCE_ENABLE:
-    case MAV_CMD_ENB_FAULT_INJECTION:
+    //case MAV_CMD_ENB_FAULT_INJECTION:
         return true;
 
     default:
@@ -878,6 +882,11 @@ bool Copter::verify_nav_wp(const AP_Mission::Mission_Command& cmd)
 
     // play a tone
     AP_Notify::events.waypoint_complete = 1;
+
+
+    //AP_HAL::console.printf("Teste");
+
+
 
     // start timer if necessary
     if(loiter_time == 0) {

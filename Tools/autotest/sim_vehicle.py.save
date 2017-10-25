@@ -704,7 +704,7 @@ if cmd_opts.frame is None:
 
 # setup ports for this instance
 mavlink_port = "tcp:127.0.0.1:" + str(5760 + 10 * cmd_opts.instance)
-simout_port = "127.0.0.1:" + str(5501 + 10 * cmd_opts.instance)
+simout_port = "192.168.1.7:" + str(5501 + 10 * cmd_opts.instance)
 
 frame_infos = vinfo.options_for_frame(cmd_opts.frame, cmd_opts.vehicle, cmd_opts)
 

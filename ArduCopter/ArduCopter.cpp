@@ -640,15 +640,26 @@ void Copter::runtime_injection()
         g2.inj_sensors,
         g2.inj_method,
         g2.inj_delay_to_start,
+        g2.inj_wp_trigger,
         g2.inj_duration,
-        g2.inj_static_values,
+        g2.inj_static_valueX,
+        g2.inj_static_valueY,
+        g2.inj_static_valueZ,
         g2.inj_noise_mean,
         g2.inj_noise_std,
         g2.inj_min_value,
         g2.inj_max_value);
     }
 
-    AP_FaultInjection::update();
+    if (AP_Notify::events.waypoint_complete) {
+        cliSerial = hal.console;
+        cliSerial->printf("Barometer\n");
+    }
+
+   // cliSerial = hal.console;
+   // cliSerial->printf("Barometer\n");
+
+    // AP_FaultInjection::update();
 }
 
 /* END FAULT INJECTIOM */

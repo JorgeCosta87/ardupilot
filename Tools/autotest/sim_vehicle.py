@@ -530,7 +530,8 @@ def start_mavproxy(opts, stuff):
         if os.path.isfile("/ardupilot.vagrant"):
             cmd.extend(["--out", "10.0.2.2:" + str(port)])
         else:
-            cmd.extend(["--out", "udpin:0.0.0.0:" + str(port)])
+            cmd.extend(["--out", "127.0.0.1:" + str(port)]) 
+            #cmd.extend(["--out", "udpin:0.0.0.0:" + str(14550)])
 
     if opts.tracker:
         cmd.extend(["--load-module", "tracker"])

@@ -579,9 +579,12 @@ public:
     AP_Int8  inj_enabled;
     AP_Int8  inj_sensors;
     AP_Int8  inj_method;
+    AP_Int8  inj_wp_trigger;
     AP_Int32 inj_delay_to_start;
     AP_Int32 inj_duration;
-    AP_Vector3f inj_static_values;
+    AP_Float inj_static_valueX;
+    AP_Float inj_static_valueY;
+    AP_Float inj_static_valueZ;
     AP_Float inj_noise_mean;
     AP_Float inj_noise_std;
     AP_Float inj_min_value;
