@@ -1060,11 +1060,29 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @Param: INJ_FIELD
     // @DisplayName: 
     // @Description:
-    // @Values: Vector3f
+    // @Values: AP_Float
     // @Range: 
     // @Increment: 
     // @User: Advanced
-    AP_GROUPINFO("INJ_FIELD", 26, ParametersG2, inj_static_values, 0),
+    AP_GROUPINFO("INJ_FIELD_X", 26, ParametersG2, inj_static_valueX, 0),
+
+    // @Param: INJ_FIELD
+    // @DisplayName: 
+    // @Description:
+    // @Values: AP_Float
+    // @Range: 
+    // @Increment: 
+    // @User: Advanced
+    AP_GROUPINFO("INJ_FIELD_Y", 27, ParametersG2, inj_static_valueY, 0),
+
+    // @Param: INJ_FIELD
+    // @DisplayName: 
+    // @Description:
+    // @Values: AP_Float
+    // @Range: 
+    // @Increment: 
+    // @User: Advanced
+    AP_GROUPINFO("INJ_FIELD_Z", 28, ParametersG2, inj_static_valueZ, 0),
     
     // @Param: NOISE_U
     // @DisplayName: Mean
@@ -1073,7 +1091,7 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @Range: 
     // @Increment: 
     // @User: Advanced
-    AP_GROUPINFO("INJ_NOISE_M", 27, ParametersG2, inj_noise_mean, 0),
+    AP_GROUPINFO("INJ_NOISE_M", 29, ParametersG2, inj_noise_mean, 0),
 
     // @Param: NOi_D
     // @DisplayName: standard deviation
@@ -1082,7 +1100,7 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @Range: 
     // @Increment: 
     // @User: Advanced
-    AP_GROUPINFO("INJ_NOiSE_D", 28, ParametersG2, inj_noise_std, 0),
+    AP_GROUPINFO("INJ_NOISE_D", 30, ParametersG2, inj_noise_std, 0),
 
     // @Param: MIN
     // @DisplayName: 
@@ -1091,7 +1109,7 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @Range: 
     // @Increment: 
     // @User: Advanced
-    AP_GROUPINFO("INJ_MIN", 29, ParametersG2, inj_min_value, 0),
+    AP_GROUPINFO("INJ_MIN", 31, ParametersG2, inj_min_value, 0),
     
     // @Param: MAX
     // @DisplayName: 
@@ -1100,7 +1118,16 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @Range: 
     // @Increment: 
     // @User: Advanced
-    AP_GROUPINFO("INJ_MAX", 30, ParametersG2, inj_max_value, 0),
+    AP_GROUPINFO("INJ_MAX", 32, ParametersG2, inj_max_value, 0),
+
+        // @Param: MAX
+    // @DisplayName: 
+    // @Description:
+    // @Values: AP_Int8
+    // @Range: 
+    // @Increment: 
+    // @User: Advanced
+    AP_GROUPINFO("INJ_WP_TRIG", 33, ParametersG2, inj_wp_trigger, 1),
 
 
 /* END FAULT INJECTION */

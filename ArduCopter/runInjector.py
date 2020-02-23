@@ -1,8 +1,8 @@
-print " Start simulator (SITL)"
+
 import dronekit_sitl
 from dronekit_sitl import SITL
 import time
-from dronekit import connect, VehicleMode, LocationGlobalRelative, LocationGlobal, Command
+from dronekit import connect, VehicleMode, LocationGlobalRelative, LocationGlobal, Command, Parameters
 from pymavlink import mavutil
 import math
 
@@ -10,10 +10,11 @@ def arm_and_takeoff(aTargetAltitude):
     
     print "Basic pre-arm checks"
     # Don't let the user try to arm until autopilot is ready
+
+
     while not vehicle.is_armable:
         print " Waiting for vehicle to initialise..."
         time.sleep(1)
-
         
     print "Arming motors"
     # Copter should arm in GUIDED mode
@@ -91,7 +92,7 @@ def readmission(filename):
                 ln_param6=float(linearray[9])
                 ln_param7=float(linearray[10])
                 ln_autocontinue=int(linearray[11].strip())
-                cmd = Command( 0, 0, 0, ln_frame, ln_command, ln_currentwp, ln_autocontinue, ln_param1, ln_param2, ln_param3, ln_param4, ln_param5, ln_param6, ln_param7)
+                cmd = Command( 0, 0, 0, ln_frame, ln_command, ln_currentwp, 11, ln_param1, ln_param2, ln_param3, ln_param4, ln_param5, ln_param6, ln_param7)
                 missionlist.append(cmd)
     return missionlist
 
@@ -112,7 +113,65 @@ def upload_mission(fileName):
         print ' Upload mission'
         vehicle.commands.upload()
 
+def setFaultInjectorParams(id, filename):
 
+    print "Load fault injector params"
+
+    with open(filename) as f:
+        for i, line in enumerate(f):
+            if i == 0 :
+                continue;
+
+            if i == id : 
+                
+                linearray=line.split(';')
+
+                #check if the next line is empty
+                if linearray[0] == '':
+                    break;
+
+                vehicle.parameters['INJ_ENABLED'] = int(linearray[1])
+                missionName = str(linearray[2])
+
+                vehicle.parameters['WPNAV_RADIUS'] = int(linearray[3])
+                vehicle.parameters['INJ_SENSORS'] = int(linearray[4])
+                vehicle.parameters['INJ_METHOD'] = int(linearray[5])
+                vehicle.parameters['INJ_DELAY'] = int(linearray[6])
+                vehicle.parameters['INJ_DURATION'] = int (linearray[7])
+                vehicle.parameters['INJ_WP_TRIG'] = int(linearray[8])
+                wp_trigger = int(linearray[8])
+                vehicle.parameters['INJ_FIELD_X'] = float(linearray[9])
+                vehicle.parameters['INJ_FIELD_Y'] = float(linearray[10])
+                vehicle.parameters['INJ_FIELD_Z'] = float(linearray[11])
+                vehicle.parameters['INJ_MIN'] = int(linearray[12])
+                vehicle.parameters['INJ_MAX'] = int(linearray[13])
+                vehicle.parameters['INJ_NOISE_D'] = float(linearray[14])
+                vehicle.parameters['INJ_NOISE_M'] = float(linearray[15])
+
+
+    print "Fault injector params loaded successful id: %d" % id
+
+    print "*********** fault parms **************"
+
+    print "INJECT ENABLED: %s" % vehicle.parameters['INJ_ENABLED']
+    print "MISSION: %s" % missionName
+    print "RADIUS: %s" % vehicle.parameters['WPNAV_RADIUS']
+    print "SENSOR: %s" % vehicle.parameters['INJ_SENSORS']
+    print "METHOD: %s" % vehicle.parameters['INJ_METHOD']
+    print "DELAY: %s" % vehicle.parameters['INJ_DELAY']
+    print "DURATION: %s" % vehicle.parameters['INJ_DURATION']
+    print "WP_TRIGGER: %s" % vehicle.parameters['INJ_WP_TRIG']
+    print "X: %s" % vehicle.parameters['INJ_FIELD_X']
+    print "Y: %s" % vehicle.parameters['INJ_FIELD_Y']
+    print "Z: %s" % vehicle.parameters['INJ_FIELD_Z']
+    print "MIN: %s" % vehicle.parameters['INJ_MIN']
+    print "MAX: %s" % vehicle.parameters['INJ_MAX']
+    print "NOISE_D: %s" % vehicle.parameters['INJ_NOISE_D']
+    print "NOISE_M: %s" % vehicle.parameters['INJ_NOISE_M']
+    print "***********  END **************"
+
+
+    return missionName, wp_trigger
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -131,24 +190,24 @@ def upload_mission(fileName):
 
 # Import DroneKit-Python
 from dronekit import connect, VehicleMode
+import os.path
+import sys, csv
+
+print " Start simulator (SITL)"
+
+
+argv = sys.argv
 
 # Connect to the Vehicle.
-#print("Connecting to vehicle on: %s" % (connection_string,))
-#vehicle = connect(connection_string, wait_ready=True)
 vehicle = connect('udp:127.0.0.1:14551', wait_ready=True)
 
-# Get some vehicle attributes (state)
-print "Get some vehicle attribute values:"
-print " GPS: %s" % vehicle.gps_0
-print " Battery: %s" % vehicle.battery
-print " Last Heartbeat: %s" % vehicle.last_heartbeat
-print " Is Armable?: %s" % vehicle.is_armable
-print " System status: %s" % vehicle.system_status.state
-print " Mode: %s" % vehicle.mode.name    # settable
-
+# set fault parms
+print "Fault id: %d" % int(argv[1])
+missionName, wp_trigger = setFaultInjectorParams(int(argv[1]),'Faults/faults.csv')
 
 # Upload a mission
-upload_mission('horizontalLine.txt')
+upload_mission('Missions/' + missionName)
+
 
 
 # Arm and Takeoff
@@ -167,26 +226,79 @@ print " Mode: %s" % vehicle.mode.name
 # Uses distance_to_current_waypoint(), a convenience function for finding the 
 #   distance to the next waypoint.
 
-while True:
-    nextwaypoint=vehicle.commands.next
-    print 'Distance to waypoint (%s): %s' % (nextwaypoint, distance_to_current_waypoint())
-    if nextwaypoint==5: #Dummy waypoint - as soon as we reach waypoint 4 this is true and we exit.
-        print "Exit 'standard' mission when start heading to final waypoint (5)"
-        break;
-    time.sleep(1)
-    
+nextwaypoint=vehicle.commands.next
+lastWP = nextwaypoint
+start_time = time.time()
+crash = 'N'
 
+while nextwaypoint <= vehicle.commands.count:
+
+    nextwaypoint=vehicle.commands.next
+
+    # Start fault injecto at the wanted WP
+    if (nextwaypoint - 1) == wp_trigger and wp_trigger != -1:
+        print "Start fault injenctor."
+        vehicle.parameters['INJ_ENABLED'] = 1
+
+    #check if it's the last wapoint
+    if(lastWP == vehicle.commands.count and nextwaypoint == 0):
+        break;
+
+    #Track the duration of each WP
+    if(lastWP != nextwaypoint):
+        start_time = time.time()
+    
+    #After 60 seconds in the same WP let's assume that we had a crash
+    if((time.time() - start_time) >= 60):
+        crash = 'Y'
+        break;
+
+    print 'Distance to waypoint (%s): %s' % (nextwaypoint, distance_to_current_waypoint())
+
+    lastWP = nextwaypoint
+    time.sleep(0.20)
+
+
+
+    print "\n**********\nINJECTENABLED: %s" %  vehicle.parameters['INJ_ENABLED']
+    
 print " Mode: %s" % vehicle.mode.name
-#print 'Return to launch'
-#vehicle.mode = VehicleMode("RTL")
-#print " Mode: %s" % vehicle.mode.name
+
+# Shut down simulator
+#sitl.stop()
+
+has_header = False
+fileExist = os.path.isfile("logs/simulations_report.csv")
+
+with open('logs/simulations_report.csv', 'a+') as outcsv:
+    writer = csv.DictWriter(outcsv, fieldnames = ["ID", "INJECTOR", "MISSION", "CRASH", "RADIUS", "SENSOR", "METHOD", "DELAY", "DURATION","WP_TRIGGER","X","Y", "Z", "MIN", "MAX", "NOISE_D", "NOISE_M"])
+    
+    if fileExist :
+        sniffer = csv.Sniffer()
+        has_header = sniffer.has_header(outcsv.read(2048))
+
+    if not has_header :
+        writer.writeheader()
+
+    writer.writerow( {
+        'ID': int(argv[1]), 'INJECTOR': vehicle.parameters['INJ_ENABLED'] ,'MISSION' : missionName, 'CRASH' : crash,
+        'RADIUS': vehicle.parameters['WPNAV_RADIUS'],'SENSOR': vehicle.parameters['INJ_SENSORS'],
+        'METHOD': vehicle.parameters['INJ_METHOD'], 'DELAY': vehicle.parameters['INJ_DELAY'],
+        'DURATION': vehicle.parameters['INJ_DURATION'],'WP_TRIGGER':vehicle.parameters['INJ_WP_TRIG'],
+        'X': vehicle.parameters['INJ_FIELD_X'], 'Y': vehicle.parameters['INJ_FIELD_Y'], 'Z': vehicle.parameters['INJ_FIELD_Z'],
+        'MIN' : vehicle.parameters['INJ_MIN'], 'MAX': vehicle.parameters['INJ_MAX'],
+        'NOISE_D':vehicle.parameters['INJ_NOISE_D'], 'NOISE_M':vehicle.parameters['INJ_NOISE_M']
+      })
 
 
 # Close vehicle object before exiting script
 vehicle.close()
-
-# Shut down simulator
-#sitl.stop()
 print("Completed")
 
 
+
+    #PRINT POSITION
+
+    #print "\n*********\nGlobal Location: %s" % vehicle.location.global_frame
+    #print "Global Location (relative altitude): %s" % vehicle.location.global_relative_frame
+    #print "Local Location: %s" % vehicle.location.local_frame    #NED

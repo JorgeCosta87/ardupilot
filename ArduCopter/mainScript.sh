@@ -1,46 +1,45 @@
 #!/bin/bash
 
-echo -n "Enter number of experiments > "
-read noe
+echo -n "Enter number of faults > "
+read nFault
 a=1 
-while [ $a -le $noe ]  
+
+
+echo -n "Enter number of repetions per fault> "
+read nRep
+
+while [ $a -le $nFault ]  
 do
 
-echo “Experiment $a”
+echo "Start fault $a,  with $nRep repetitions"
 
-fileName=faults/FaultDef$a.csv
-echo $fileName
-cp $fileName FaultDef.csv
-
-gnome-terminal -e ./sim_vehicle.sh &
-#sim_pid=$!
-#echo $sim_pid
-sleep 30
-
-start=$SECONDS
-python runInjector.py &
-#python_pid=$!
-#echo $python_pid
-
-duration=$((SECONDS-start))
-echo $duration
-
-while [ $duration -lt 60 ]
+for ((i=1; i<= $nRep ; i++))
 do
-	sleep 1
+
+	echo “Repetition $i”
+
+	#start simulation
+	xterm -hold -e ~/ardupilot/Tools/autotest/sim_vehicle.py -j4 -l 40.1846674593393,-8.41455034911633,0,0 & 
+
+	sleep 30
+
+	start=$SECONDS
+	python runInjector.py $a
+
 	duration=$((SECONDS-start))
-done
+	echo $duration
 
-echo “Experiment $a took $duration seconds”
-echo killing the processes
-pkill -9 xterm
-pkill -9 python
-#kill -9 $python_pid
-#kill -9 $sim_pid
+	duration=$((SECONDS-start))
 
-sleep 10
+	echo “Experiment $a took $duration seconds”
+	echo killing the processes
+	pkill -9 xterm
+	pkill -9 python
+
+	sleep 10
+	done
 
 a=$((a+1))
-
-
 done
+
+
