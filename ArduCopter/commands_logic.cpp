@@ -191,8 +191,8 @@ bool Copter::verify_command_callback(const AP_Mission::Mission_Command& cmd)
             gcs().send_mission_item_reached_message(cmd.index);
 
             AP_FaultInjection::incrementWaypoit();
-            cliSerial = hal.console;
-            cliSerial->printf("WP: %d", cmd.index);
+            //cliSerial = hal.console;
+            //cliSerial->printf("WP: %d", cmd.index);
         }
 
         return cmd_complete;

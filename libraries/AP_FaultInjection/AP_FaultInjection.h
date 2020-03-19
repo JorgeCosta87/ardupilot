@@ -33,55 +33,55 @@
 class AP_FaultInjection
 {
 
-public:
+    public:
 
-    AP_FaultInjection(void);
+        AP_FaultInjection(void);
 
-    static void start_fault_injection();
-    static void stop_fault_injection();
-    static void loadValues(
-        AP_Int8 inj_sensors, AP_Int8 inj_method,
-        AP_Int32 inj_delay_to_start, AP_Int8  inj_wp_trigger,
-        AP_Int32 inj_duration, AP_Float static_valueX,
-        AP_Float static_valueY, AP_Float static_valueZ,
-        AP_Float inj_noise_mean, AP_Float inj_noise_std,
-        AP_Float inj_min_value, AP_Float inj_max_value);
+        static void start_fault_injection();
+        static void stop_fault_injection();
+        static void loadValues(
+            AP_Int8 inj_sensors, AP_Int8 inj_method,
+            AP_Int32 inj_delay_to_start, AP_Int8  inj_wp_trigger,
+            AP_Int32 inj_duration, AP_Float static_valueX,
+            AP_Float static_valueY, AP_Float static_valueZ,
+            AP_Float inj_noise_mean, AP_Float inj_noise_std,
+            AP_Float inj_min_value, AP_Float inj_max_value);
 
-    static void incrementWaypoit();
-    static void resetWaypoitCount();
-    static void checkState(AP_Int8 inj_enabled, bool armed);
-    static void update();
+        static void incrementWaypoit();
+        static void resetWaypoitCount();
+        static void checkState(AP_Int8 inj_enabled, bool armed);
+        static void update();
 
-    static void manipulate_values(Vector3f *rawField, uint8_t sens);
-    static void manipulate_single_Value(float *value, uint8_t sens);
+        static void manipulate_values(Vector3f *rawField, uint8_t sens);
+        static void manipulate_single_Value(float *value, uint8_t sens);
 
 
-    static float random_float(float min, float max);
-    static void gaussian_noise(Vector3f *rawField, float mean, float std);
+        static float random_float(float min, float max);
+        static void gaussian_noise(Vector3f *rawField, float mean, float std);
 
-    static bool isEnableFaultInjection;
-    static bool isRunningFaultInjection;
+        static bool isEnableFaultInjection;
+        static bool isRunningFaultInjection;
 
-    static const struct AP_Param::GroupInfo var_info[];
-    static bool     readLastValue;
-    static Vector3f last_value;
+        static const struct AP_Param::GroupInfo var_info[];
+        static bool  readLastValue;
+        static Vector3f last_value;
 
-    static bool isArmed;
-    static bool onStart;
-    static int8_t countWP;
-    static int8_t wp_trigger;
-    static uint32_t delay;
-    static uint32_t duration;
-    static uint64_t time_to_start;
-    static uint64_t time_to_stop;
+        static bool isArmed;
+        static bool onStart;
+        static int8_t wp_fault_triggered;
+        static int8_t current_WP;
+        static int8_t wp_trigger;
+        static uint32_t delay;
+        static uint32_t duration;
+        static uint64_t time_to_start;
+        static uint64_t time_to_stop;
 
-    static int8_t         sensors;
-    static int8_t         method;
+        static int8_t         sensors;
+        static int8_t         method;
 
-    static Vector3f static_rawField;
-    static float    noise_mean;
-    static float    noise_std;
-    static float    max_value;
-    static float    min_value;
-
+        static Vector3f static_rawField;
+        static float    noise_mean;
+        static float    noise_std;
+        static float    max_value;
+        static float    min_value;
 };

@@ -236,9 +236,9 @@ while nextwaypoint <= vehicle.commands.count:
     nextwaypoint=vehicle.commands.next
 
     # Start fault injecto at the wanted WP
-    if (nextwaypoint - 1) == wp_trigger and wp_trigger != -1:
-        print "Start fault injenctor."
-        vehicle.parameters['INJ_ENABLED'] = 1
+    #if (nextwaypoint - 1) == wp_trigger and wp_trigger != -1:
+    #    print "Start fault injenctor."
+    #    #vehicle.parameters['INJ_ENABLED'] = 1
 
     #check if it's the last wapoint
     if(lastWP == vehicle.commands.count and nextwaypoint == 0):
@@ -259,8 +259,6 @@ while nextwaypoint <= vehicle.commands.count:
     time.sleep(0.20)
 
 
-
-    print "\n**********\nINJECTENABLED: %s" %  vehicle.parameters['INJ_ENABLED']
     
 print " Mode: %s" % vehicle.mode.name
 

@@ -15,10 +15,11 @@ int8_t AP_FaultInjection::method = 0;
 int8_t AP_FaultInjection::wp_trigger = 0;
 bool AP_FaultInjection::onStart = false;
 bool AP_FaultInjection::isArmed = false;
-int8_t AP_FaultInjection::countWP = 0;
+int8_t AP_FaultInjection::current_WP = 0;
 uint32_t AP_FaultInjection::delay = 0;
 uint32_t AP_FaultInjection::duration = 0;
 uint64_t AP_FaultInjection::time_to_stop = 0;
+int8_t AP_FaultInjection::wp_fault_triggered = -1;
 
 float AP_FaultInjection::noise_mean = 0;
 float AP_FaultInjection::noise_std = 0;
@@ -34,40 +35,26 @@ AP_FaultInjection::AP_FaultInjection(void)
 {
 }
 
-
 void AP_FaultInjection::incrementWaypoit()
 {
-    countWP++;
+    current_WP++;
+    hal.console->printf("WAYPOINT: %d ", current_WP);
 }
 
 void AP_FaultInjection::resetWaypoitCount()
 {
-    countWP = 0;
-}
-
-void AP_FaultInjection::start_fault_injection(){
-
-    if(!isEnableFaultInjection){
-        return;
-    }
-
-    isRunningFaultInjection = true;
-    readLastValue = false;
-    last_value.zero();
-    time_to_stop = AP_HAL::millis() + duration;
+    current_WP = 0;
 }
 
 void AP_FaultInjection::checkState(AP_Int8 inj_enabled, bool armed)
 {
-
-    if(isEnableFaultInjection != inj_enabled)
+    if(inj_enabled == 0)
     {
-        isEnableFaultInjection = inj_enabled;
-        
-            if(inj_enabled)
-                AP_FaultInjection::start_fault_injection();
-            else
-                AP_FaultInjection::stop_fault_injection();
+        isEnableFaultInjection = false;
+    }
+    else
+    {
+        isEnableFaultInjection = true;
     }
 
     isArmed = armed;
@@ -81,6 +68,7 @@ void AP_FaultInjection::loadValues(
     AP_Float inj_noise_mean, AP_Float inj_noise_std,
     AP_Float inj_min_value, AP_Float inj_max_value)
 {
+
     //load values
     sensors = inj_sensors;
     method = inj_method;
@@ -98,7 +86,7 @@ void AP_FaultInjection::loadValues(
     max_value = inj_max_value;
 
 /*
-    printf("update:"
+    hal.console->printf("update:"
     "\n\t enabled: %d"
     "\n\t sensors: %d"
     "\n\t method: %d"
@@ -118,35 +106,45 @@ void AP_FaultInjection::loadValues(
 */
 }
 
-/*
 void AP_FaultInjection::update()
 {
     if(isEnableFaultInjection)
     {
-        if(isArmed || onStart){
-            if(!isRunningFaultInjection)
+        if(isRunningFaultInjection){
+          
+            if(AP_HAL::millis() > time_to_stop && duration != INFINITE)
             {
-                delay += AP_HAL::millis();
-                start_fault_injection();
-                printf("\nstart FAULT!\n");
-            }
-            }
-        else if(isRunningFaultInjection){
-            if(AP_HAL::millis() > (delay + duration) && duration != INFINITE)
-            {
-                stop_fault_injection();
-                printf("\nSTOP FAULT!\n");
                 
+                stop_fault_injection();
+                hal.console->printf("\n*********STOP FAULT!*********\n");
             }
-        }   
-    }else{
-        AP_FaultInjection::stop_fault_injection();
+        }
+        else{
+            if(current_WP == wp_trigger && wp_fault_triggered != current_WP)
+            {
+                wp_fault_triggered = current_WP;
+                start_fault_injection();
+                hal.console->printf("\n*********Start FAULT! WP: %d *********\n", current_WP);
+            }
+        }
     }
 }
-*/
+
+void AP_FaultInjection::start_fault_injection(){
+
+    if(!isEnableFaultInjection){
+        return;
+    }
+
+    isRunningFaultInjection = true;
+    readLastValue = false;
+    last_value.zero();
+    time_to_stop = AP_HAL::millis() + duration;
+}
 
 void AP_FaultInjection::stop_fault_injection(){
     
+    isEnableFaultInjection = false;
     isRunningFaultInjection = false;
     readLastValue = false;
     last_value.zero();
@@ -159,92 +157,82 @@ void AP_FaultInjection::manipulate_values(Vector3f *rawField, uint8_t sens){
        return;
     }
 
+    if(!isRunningFaultInjection){
+        return;
+    }
+
     //check if it's the chosen sensor
     if(sens != sensors){
         return;
     }
 
-    if(AP_HAL::millis() >= time_to_stop){
-        stop_fault_injection();
-        return;
-    }
+    hal.console->printf("\nBefore:\n  x: %.4f\n  y: %.4f\n  z: %.4f\n",rawField->x,rawField->y,rawField->z);
 
-    if(isRunningFaultInjection)
+    switch(method)
     {
-        //printf("Sensor: %d - before:\n  x: %.4f\n  y: %.4f\n  z: %.4f\n",sensors , rawField->x,rawField->y,rawField->z);
-        switch(method)
-        {
-            case INJECT_STATIC_VALUES : {
-                rawField->x = static_rawField.x;
-                rawField->y = static_rawField.y;
-                rawField->z = static_rawField.z;
-                break;
-            }
-
-            case INJECT_RANDOM_VALUES : {
-                rawField->x = random_float(min_value, max_value);
-                rawField->y = random_float(min_value, max_value);
-                rawField->z = random_float(min_value, max_value);
-                break;
-            }
-
-            case INJECT_NOISE : {
-                gaussian_noise(rawField, noise_mean, noise_std);
-                break;
-            }
-
-            case INJECT_REPEAT_LAST_KNOWN_VALUE : {
-                if(!readLastValue){
-                    last_value.x = rawField->x;
-                    last_value.y = rawField->y;
-                    last_value.z = rawField->z;
-
-                    readLastValue = true;
-                }
-                rawField->x = last_value.x; 
-                rawField->y = last_value.y;
-                rawField->z = last_value.z;
-                break;
-            }
-
-            case INJECT_DOUBLE : {
-                rawField->x = rawField->x * 2.0;
-                rawField->y = rawField->y * 2.0;
-                rawField->z = rawField->z * 2.0;
-
-                break;
-            }
-
-            case INJECT_HALF : {
-                rawField->x = rawField->x / 2.0;
-                rawField->y = rawField->y / 2.0;
-                rawField->z = rawField->z / 2.0;
-                break;
-            }
-
-            case INJECT_MAX_VALUE : {
-                rawField->x = max_value;
-                rawField->y = max_value;
-                rawField->z = max_value;
-                break;
-            }
-            
-            case INJECT_DOUBLE_MAX : {
-                rawField->x = max_value * 2.0;
-                rawField->y = max_value * 2.0;
-                rawField->z = max_value * 2.0;
-                break;
-            }
-            case INJECT_MIN_VALUE : {
-                rawField->x = min_value * 2.0;
-                rawField->y = min_value * 2.0;
-                rawField->z = min_value * 2.0;
-                break;
-            }
+        case INJECT_STATIC_VALUES : {
+            rawField->x = static_rawField.x;
+            rawField->y = static_rawField.y;
+            rawField->z = static_rawField.z;
+            break;
         }
+        case INJECT_RANDOM_VALUES : {
+            rawField->x = random_float(min_value, max_value);
+            rawField->y = random_float(min_value, max_value);
+            rawField->z = random_float(min_value, max_value);
+            break;
+        }
+        case INJECT_NOISE : {
+            gaussian_noise(rawField, noise_mean, noise_std);
+            break;
+        }
+        case INJECT_REPEAT_LAST_KNOWN_VALUE : {
+            if(!readLastValue){
+                last_value.x = rawField->x;
+                last_value.y = rawField->y;
+                last_value.z = rawField->z;
 
-        //printf("\nafter:\n  x: %.4f\n  y: %.4f\n  z: %.4f\n",rawField->x,rawField->y,rawField->z);
+                readLastValue = true;
+            }
+            rawField->x = last_value.x; 
+            rawField->y = last_value.y;
+            rawField->z = last_value.z;
+            break;
+        }
+        case INJECT_DOUBLE : {
+            rawField->x = rawField->x * 2.0;
+            rawField->y = rawField->y * 2.0;
+            rawField->z = rawField->z * 2.0;
+
+            break;
+        }
+        case INJECT_HALF : {
+            rawField->x = rawField->x / 2.0;
+            rawField->y = rawField->y / 2.0;
+            rawField->z = rawField->z / 2.0;
+            break;
+        }
+        case INJECT_MAX_VALUE : {
+            rawField->x = max_value;
+            rawField->y = max_value;
+            rawField->z = max_value;
+            break;
+        }
+        case INJECT_DOUBLE_MAX : {
+            rawField->x = max_value * 2.0;
+            rawField->y = max_value * 2.0;
+            rawField->z = max_value * 2.0;
+            break;
+        }
+        case INJECT_MIN_VALUE : {
+            rawField->x = min_value * 2.0;
+            rawField->y = min_value * 2.0;
+            rawField->z = min_value * 2.0;
+            break;
+        }
     }
+
+    hal.console->printf("\nafter:\n  x: %.4f\n  y: %.4f\n  z: %.4f\n",rawField->x,rawField->y,rawField->z);
 }
 
 void AP_FaultInjection::manipulate_single_Value(float *value, uint8_t sens){

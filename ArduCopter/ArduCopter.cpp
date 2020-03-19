@@ -651,15 +651,10 @@ void Copter::runtime_injection()
         g2.inj_max_value);
     }
 
-    if (AP_Notify::events.waypoint_complete) {
-        cliSerial = hal.console;
-        cliSerial->printf("Barometer\n");
-    }
-
    // cliSerial = hal.console;
    // cliSerial->printf("Barometer\n");
 
-    // AP_FaultInjection::update();
+    AP_FaultInjection::update();
 }
 
 /* END FAULT INJECTIOM */
