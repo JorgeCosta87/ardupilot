@@ -22,7 +22,6 @@ x,y,z = utils.GetGPSData(sys.argv[1]);
 ax.plot(x, y, z, label = "default run");
 
 #Keep real terrain height to use for takeoff and landing on the mission waypoints, since mission planner is innacurate. 
-#TODO: Explore ways to make it so it gathers the altitude on by itself.
 firstH = z[0];
 lastH = z[-1];
 
