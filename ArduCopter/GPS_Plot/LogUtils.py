@@ -13,9 +13,10 @@ def GetGPSData(filename):
     
     for line in file:
         split = line.split(",");
-        x.append(float(split[0]));
-        y.append(float(split[1]));
-        z.append(float(split[2]));
+
+        x.append(float(split[2]));
+        y.append(float(split[3]));
+        z.append(float(split[4]));
 
     file.close();
 

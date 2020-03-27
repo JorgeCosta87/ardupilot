@@ -135,7 +135,7 @@ getSensorLogEntries(){
 
             case "${array[2]}" in 
                 "GPS")
-                    data=$(echo "$stamp,${array[23]},${array[26]},${array[29]}");
+                    data=$(echo "$stamp,${array[26]},${array[23]},${array[29]}");
                     writeToFile
                     ;;
 
