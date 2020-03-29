@@ -1,134 +1,151 @@
 #!/bin/bash
 
-printHelp(){
+usage(){
     printf "\n\033[1;40mUsage:\033[0;40m\n";
-    printf "\033[40m$0 <filename.log> <optional: filetosave.log> \033[1;95;40m<optional:sensors>\033[0;40m\n\n";
-    printf "\033[40mSavefile: if the savefile argument is equal to \"/dev/null\" it ignores the argument and writes to the console.\033[0m\n\n"
-    printf "\033[1;40mSensors:\033[0m\n"
-    printf "\033[1;91;40mif no sensors are specified \033[1;95;40m(3rd argument)\033[1;91;40m, it will filter out every sensor\033[0;40m\n";
-    printf "\033[1;40mIn order to specify multiple sensors, a \",\" must be used between the values. List of possible values:\n\033[0;40m";
-    printf "\033[1;95;40mgyro - Gyroscope\nacce - Accelerometer\nbaro - Barometer\ncmps - Compass\nGPS - Global Positioning System\033[0;40m\n";
-    printf "\n\033[1;40mExamples:\033[0m\n\033[1;32;40m$0 file.log savefile.txt \"baro,acce,gps\"\033[0;40m\n";
-	printf "\033[1;32;40m$0 file.log savefile.txt\033[0m\n\n";
+    printf "\033[40m$0 <mandatory: -f filename.log> <optional: -s filetosave.log> \033[1;95;40m<optional:sensors -abcgp>\033[0;40m\n\n";
+    printf "\033[40mSavefile: if the savefile -s argument is not specified the output is written directly into the console.\033[0m\n\n"
+    printf "\033[1;40mSensors:\033[21m A sensor must be specified or the output will be null\n"
+    printf "\033[1;95;40m -g Gyroscope\n"
+    printf " -a  Accelerometer\n"
+    printf " -b  Barometer\n"
+    printf " -c  Compass\n"
+    printf " -p  GPS\033[0;40m\n\n";
+    printf "\033[1;40mExamples:\033[0m\n\033[1;32;40m$0 -f file.log -s savefile.txt -abcgp\033[0;40m\n";
+	printf "\033[1;32;40m$0 -f file.log -g -a\033[0m\n\n";
 }
 
 writeToFile(){
-    if [ "$savefile" != "" ]; then
-        echo "$data" >> $savefile;
-    else
+    if [ -z $savefile ]; then
         echo "$data"
+    else
+        echo "$data" >> $savefile;
     fi
 }
 
 parseArguments(){
-    #Validity check
-    if [ $# -lt 1 ] || [ $# -gt 3 ]; then
-        printHelp;
-        exit 1;
-    fi
-    
-    #check if log file exists
-    filename=$1;
-    if [ ! -f "$filename" ]; then
-        echo "file \"$filename\" does not exist!";
+    if [ $# == 0 ]; then
+        usage
         exit 1;
     fi
 
-    #Check if savefile exists or if it's Dev/null
-    if [ $# -gt 1 ]; then
-        savefile=$2;
-        
-        if [ -f "$savefile" ]; then
-            echo "file \"$savefile\" already exists!";
-            exit 1;
-        fi
-
-        if [ $savefile == "/dev/null" ]; then
-            savefile="";
-        fi
-    fi
-
-    if [ $# -lt 3 ] || [ $3 == "" ]; then
-        logType="gps,acce,gyro,baro,cmps";
-    else
-        logType=$3
-    fi
-}
-
-#Check masks
-checkMasks(){
     masks=();
     maskName=();
-    gyroFlag=false;
-    accelFlag=false;
-    IMUCheck=0;
+    while getopts ":h f: s: abcgp" opt; do
+        case $opt in
+            f) #adding more files to parse
+                #check if file exists
+                if [ ! -f $OPTARG ]; then
+                    echo "File $OPTARG does not exist!";
+                    exit 1;
+                fi
 
-    IFS=',';
-    read -ra params <<< "$logType";
-    for param in "${params[@]}"; do
-        case "${param,,}" in
-            "gps") #this is hard
+                filename="$OPTARG";
+                ;;
+
+            s) #this is the log,
+                if [ -f $OPTARG ]; then
+                    echo "A file with the name $OPTARG already exist!";
+                    exit 1;
+                fi
+
+                if [ $OPTARG == "" ]; then
+                    echo "Save file name cannot be \"$OPTARG\"."
+                    exit 1;
+                fi
+                
+                savefile="$OPTARG";
+                ;;
+
+            p) #GPS
+                if [ ! -z $gps ]; then
+                    continue;
+                fi
+
                 masks+=(": GPS {");
                 maskName+=("GPS");
+
+                local gps=true;
                 ;;
-                
-            "baro") #Barometer
+
+            b) #Barometer
+                if [ ! -z $barometer ]; then
+                    continue;
+                fi
+
                 masks+=(": BARO {");
                 maskName+=("BAROMETER");
+
+                local barometer=true;
                 ;;
 
-            "gyro") #Gyroscope
-                masks+=(": IMU {");
-                masks+=(": IMU2 {");
-                maskName+=("GYRO/ACCEL");
-                maskName+=("GYRO/ACCEL2");
-
-                if [ $gyroFlag == false ]; then
-                    IMUCheck=$(($IMUCheck + 5));
-                    gyroFlag=true;
+            c) #compass
+                if [ ! -z $compass ]; then
+                    continue;
                 fi
-                ;;
 
-            "acce") #Accelerometer
-                masks+=(": IMU {");
-                masks+=(": IMU2 {");
-                maskName+=("GYRO/ACCEL");
-                maskName+=("GYRO/ACCEL2");
-
-                if [ $accelFlag == false ]; then
-                    IMUCheck=$(($IMUCheck + 10));
-                    accelFlag=true;
-                fi
-                ;;
-
-            "cmps") #Compass
                 masks+=(": MAG {");
                 masks+=(": MAG2 {");
                 maskName+=("COMPASS");
                 maskName+=("COMPASS2");
+
+                local compass=true;
                 ;;
+
+            a) #Accelerometer
+                if [ ! -z $accelerometer ]; then
+                    continue;
+                fi
+
+                masks+=(": IMU {");
+                masks+=(": IMU2 {");
+                maskName+=("GYRO/ACCEL");
+                maskName+=("GYRO/ACCEL2");
                 
-            *)
-                printHelp
+                accelerometer=true;
+                ;;
+
+            g) #Gyroscope
+                if [ ! -z $gyroscope ]; then
+                    continue;
+                fi
+
+                masks+=(": IMU {");
+                masks+=(": IMU2 {");
+                maskName+=("GYRO/ACCEL");
+                maskName+=("GYRO/ACCEL2");
+
+                gyroscope=true;
+                ;;
+
+            
+            h) #help message
+                usage
                 exit 1;
+                ;;
+
+            \?)
+                echo "Invalid option: -$OPTARG. Try -h for help" >&2
+                exit 1;
+                ;;
+            
+            :)
+                echo "Option -$OPTARG requires an argument." >&2
+                exit 1
+                ;;
         esac
     done
 
-    IFS=','
-    #Remove duplicates with awk -- This is very hacky due to the format of the strings
-    masks=($(printf "%s,\n" "${masks[@]}" | awk '!a[$0]++')); 
-    maskName=($(printf "%s,\n" "${maskName[@]}" | awk '!a[$0]++'));
+    if [ -z $filename ]; then
+        printf "\033[1;31mThe filename is mandatory, try -h \033[0m\n"
+        exit 1;
+    fi
 
-    #Remove \n from the beginning of the strings
-    for x in ${!masks[@]}; do
-        masks[$x]=$(echo "${masks[x]//[$'\t\r\n']}");
-        maskName[$x]=$(echo "${maskName[x]//[$'\t\r\n']}");
-    done
 }
 
 getSensorLogEntries(){
+    IFS=','; #This is here so that the GREP on line 180 works properly
     for i in "${!masks[@]}"; do
-
+        
         #Get Sensor Entries 
         while IFS=' {},' read -ra array; do
             stamp=$(echo "${maskName[i]},${array[0]} ${array[1]}");
@@ -141,20 +158,13 @@ getSensorLogEntries(){
 
                 "IMU" | "IMU2") #ACE/GYRO
                     #Override stamp so that we can separate Gyro and Accel logs 
-                    if [ $IMUCheck == 5 ]; then
+                    if [ ! -z $gyroscope ]; then
                         stamp=$(echo "GYRO,${array[0]} ${array[1]}");
                         data=$(echo "$stamp,${array[8]},${array[11]},${array[14]}");
                         writeToFile
-
-                    elif [ $IMUCheck == 10 ];then
-                        stamp=$(echo "ACCEL,${array[0]} ${array[1]}");
-                        data=$(echo "$stamp,${array[17]},${array[20]},${array[23]}");
-                        writeToFile
-                    else
-                        stamp=$(echo "GYRO,${array[0]} ${array[1]}");
-                        data=$(echo "$stamp,${array[8]},${array[11]},${array[14]}");
-                        writeToFile
-
+                    fi
+                    
+                    if [ ! -z $accelerometer ];then
                         stamp=$(echo "ACCEL,${array[0]} ${array[1]}");
                         data=$(echo "$stamp,${array[17]},${array[20]},${array[23]}");
                         writeToFile
@@ -176,21 +186,13 @@ getSensorLogEntries(){
                     ;;
             esac
         done <<< $(grep "${masks[i]}" "$filename")
+        
     done
 }
 
 main(){
-    parseArguments $1 $2 $3
-    checkMasks
+    parseArguments "$@"
     getSensorLogEntries
 }
 
-#Global variables, these are used to avoid shell parsing [which is a nightmare] performance and syntax wise.
-declare filename
-declare savefile
-declare masks
-declare maskName
-declare logType
-declare IMUCheck
-
-main $1 $2 $3
+main "$@"
