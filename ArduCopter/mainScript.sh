@@ -45,7 +45,7 @@ runTests(){
 
 		#Start fault injector, This does not mean it will inject faults.
 		start=$SECONDS
-		python runInjector.py $a
+		python runInjector.py $currentMission
 
 		#Show duration of experiment
 		duration=$((SECONDS-start))
