@@ -85,7 +85,6 @@ if options.mission:
     if not options.files:
         mission = utils.GetMissionWaypoints(str(options.mission));
     else:
-        print "its this one"
         mission = utils.GetMissionWaypoints(str(options.mission), firstH, lastH);
     
     x = []; y = []; z = [];
