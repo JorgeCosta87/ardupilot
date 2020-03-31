@@ -99,7 +99,7 @@ main(){
 
 			#Run mission with n repetitions
 			echo "Running mission $currentMission: ${array[2]},  with $nRep repetitions"
-			#runTests
+			runTests
 
 			#go to next mission
 			currentMission=$((currentMission+1))
