@@ -1,5 +1,30 @@
 #!/bin/bash
 
+usage(){
+	echo "usage: $0 <optional: speed of simulation [0-5]>"
+}
+
+checkArguments(){
+	if (($# == 0 )) || (( $# > 1 )); then
+		EMULATION_SPEED=1
+		return;
+	fi
+
+	re='^[0-9]+([.][0-9]+)?$'
+	if ! [[ $1 =~ $re ]]; then
+		echo "argument must be a number!"
+		usage
+		exit 1;
+	fi
+
+	if (($1 > 5 )) || (( $1 <= 0 )); then
+		usage
+		exit 1;
+	fi
+
+	EMULATION_SPEED=$1
+}
+
 askForInput(){
 	echo -n "Enter number of faults > "
 	read nFault
@@ -38,7 +63,7 @@ runTests(){
 		echo “Repetition $i”
 		
 		#start simulation
-		xterm -hold -e ~/ardupilot/Tools/autotest/sim_vehicle.py -j4 -l $lat,$lng,0,0 &
+		xterm -hold -e ~/ardupilot/Tools/autotest/sim_vehicle.py -j4 -l $lat,$lng,0,0 -S $EMULATION_SPEED &
 		
 		#Wait for SITL to boot up
 		sleep 30
@@ -56,6 +81,7 @@ runTests(){
 }
 
 main(){
+	checkArguments "$@"
 	askForInput
 
 	{ #This is required so the redirection know it's targets
@@ -73,7 +99,7 @@ main(){
 
 			#Run mission with n repetitions
 			echo "Running mission $currentMission: ${array[2]},  with $nRep repetitions"
-			runTests
+			#runTests
 
 			#go to next mission
 			currentMission=$((currentMission+1))
@@ -82,4 +108,4 @@ main(){
 	} < "$HOME/ardupilot/ArduCopter/Faults/faults.csv"
 }
 
-main
+main "$@"
