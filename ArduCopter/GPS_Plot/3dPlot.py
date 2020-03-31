@@ -96,7 +96,7 @@ if options.mission:
         z.append(waypoint.z);
         z.append(waypoint.z1);
 
-    ax.plot(x, y, z, label=options.missionlabel, colour="red");
+    ax.plot(x, y, z, label=options.missionlabel, color="red");
 
     #store landing data to calculate distance
     missionlanding = (y[-1],x[-1]);
@@ -107,7 +107,7 @@ if options.distance:
     
     for i in range(len(options.captions)):
         print runLandZones[i],"-",missionlanding;    
-        print "Distance between ",options.captions[i],"-LZ to ",options.missionlabel[0],"-LZ: ",distance(runLandZones[i],missionlanding).meters,"m"
+        print "Distance between ",options.captions[i],"-LZ to ",options.missionlabel,"-LZ: ",distance(runLandZones[i],missionlanding).meters,"m"
 
 ax.legend()
 plt.show()
