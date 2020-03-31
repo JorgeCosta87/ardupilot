@@ -249,9 +249,9 @@ while nextwaypoint <= vehicle.commands.count:
         start_time = time.time()
     
     #After 60 seconds in the same WP let's assume that we had a crash
-    if((time.time() - start_time) >= 60):
-        crash = 'Y'
-        break;
+    #if((time.time() - start_time) >= 60):
+     #   crash = 'Y'
+     #   break;
 
     print 'Distance to waypoint (%s): %s' % (nextwaypoint, distance_to_current_waypoint())
 
