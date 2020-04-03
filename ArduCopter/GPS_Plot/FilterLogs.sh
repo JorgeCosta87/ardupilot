@@ -18,7 +18,7 @@ writeToFile(){
     if [ -z $savefile ]; then
         echo "$data"
     else
-        echo "$data" >> $savefile;
+        echo "$data" >> "$savefile";
     fi
 }
 
@@ -34,7 +34,7 @@ parseArguments(){
         case $opt in
             f) #adding more files to parse
                 #check if file exists
-                if [ ! -f $OPTARG ]; then
+                if [ ! -f "$OPTARG" ]; then
                     echo "File $OPTARG does not exist!";
                     exit 1;
                 fi
@@ -43,12 +43,12 @@ parseArguments(){
                 ;;
 
             s) #this is the log,
-                if [ -f $OPTARG ]; then
+                if [ -f "$OPTARG" ]; then
                     echo "A file with the name $OPTARG already exist!";
                     exit 1;
                 fi
 
-                if [ $OPTARG == "" ]; then
+                if [ "$OPTARG" == "" ]; then
                     echo "Save file name cannot be \"$OPTARG\"."
                     exit 1;
                 fi
@@ -148,7 +148,7 @@ getSensorLogEntries(){
         
         #Get Sensor Entries 
         while IFS=' {},' read -ra array; do
-            stamp=$(echo "${maskName[i]},${array[0]} ${array[1]}");
+            stamp=$(echo "${maskName[i]},${array[0]} ${array[1]%?}");
 
             case "${array[2]}" in 
                 "GPS")
@@ -159,13 +159,13 @@ getSensorLogEntries(){
                 "IMU" | "IMU2") #ACE/GYRO
                     #Override stamp so that we can separate Gyro and Accel logs 
                     if [ ! -z $gyroscope ]; then
-                        stamp=$(echo "GYRO,${array[0]} ${array[1]}");
+                        stamp=$(echo "GYRO,${array[0]} ${array[1]%?}");
                         data=$(echo "$stamp,${array[8]},${array[11]},${array[14]}");
                         writeToFile
                     fi
                     
                     if [ ! -z $accelerometer ];then
-                        stamp=$(echo "ACCEL,${array[0]} ${array[1]}");
+                        stamp=$(echo "ACCEL,${array[0]} ${array[1]%?}");
                         data=$(echo "$stamp,${array[17]},${array[20]},${array[23]}");
                         writeToFile
                     fi
