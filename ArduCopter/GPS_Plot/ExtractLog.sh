@@ -24,7 +24,7 @@ argumentParsing(){
         case $opt in
             f) #adding more files to parse
                 #check if file exists
-                if [ ! -f $OPTARG ]; then
+                if [ ! -f "$OPTARG" ]; then
                     echo "File $OPTARG does not exist!";
                     exit 1;
                 fi
@@ -32,8 +32,8 @@ argumentParsing(){
                 files+=("$OPTARG");
                 ;;
 
-            s) #this is the log,
-                if [ -f $OPTARG ]; then
+            s) #this is the log save file 
+                if [ -f "$OPTARG" ]; then
                     echo "A file with the name $OPTARG already exist!";
                     exit 1;
                 fi
@@ -67,17 +67,17 @@ argumentParsing(){
 extractLogs(){
     for ((i=0; i < ${#files[@]}; i++)); do
 
-        if [ -z ${savefiles[i]} ]; then
-            if [ ! ${files[i],,} == *".bin" ]; then #if the name does not have a .bin
+        if [ -z "${savefiles[i]}" ]; then
+            if [[ ! ${files[i],,} == *".bin" ]]; then #if the name does not have a .bin
                 outFilename="${files[i]}.log"
             else
                 outFilename=$(printf "${files[i]/%.*/.log}")
             fi
         else
-            outFilename=${savefiles[i]}
+            outFilename="${savefiles[i]}"
         fi
 
-        mavlogdump.py --planner --format='csv'--csv_sep='tab' ${files[i]} > $outFilename
+        mavlogdump.py --planner --format='csv'--csv_sep='tab' "${files[i]}" > "$outFilename"
     done 
 }
 
