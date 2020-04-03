@@ -1,5 +1,6 @@
 #include <random>
 #include <stdio.h>
+#include <chrono>
 
 #include <AP_HAL/AP_HAL.h>
 
@@ -110,21 +111,29 @@ void AP_FaultInjection::update()
 {
     if(isEnableFaultInjection)
     {
+        auto now = std::chrono::system_clock::now();
+        auto nowMs = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+
+        time_t rawtime = std::chrono::system_clock::to_time_t(now);
+
+        struct tm * timeinfo;
+        char buffer [80];
+        timeinfo = localtime (&rawtime);
+        strftime (buffer, 80,"%Y-%m-%d %H:%M:%S",timeinfo);
+        
         if(isRunningFaultInjection){
           
             if(AP_HAL::millis() > time_to_stop && duration != INFINITE)
             {
-                
                 stop_fault_injection();
-                hal.console->printf("\n*********STOP FAULT!*********\n");
+                hal.console->printf("\nfault_Injection_end:%s.%d\n",buffer,(int) (nowMs.count()/10));
             }
         }
         else{
             if(current_WP == wp_trigger && wp_fault_triggered != current_WP)
             {
-                wp_fault_triggered = current_WP;
                 start_fault_injection();
-                hal.console->printf("\n*********Start FAULT! WP: %d *********\n", current_WP);
+                hal.console->printf("\nfault_Injection_start:%s.%d\n",buffer,(int) (nowMs.count() /10));
             }
         }
     }
@@ -165,8 +174,6 @@ void AP_FaultInjection::manipulate_values(Vector3f *rawField, uint8_t sens){
     if(sens != sensors){
         return;
     }
-
-    hal.console->printf("\nBefore:\n  x: %.4f\n  y: %.4f\n  z: %.4f\n",rawField->x,rawField->y,rawField->z);
 
     switch(method)
     {
@@ -231,8 +238,6 @@ void AP_FaultInjection::manipulate_values(Vector3f *rawField, uint8_t sens){
             break;
         }
     }
-
-    hal.console->printf("\nafter:\n  x: %.4f\n  y: %.4f\n  z: %.4f\n",rawField->x,rawField->y,rawField->z);
 }
 
 void AP_FaultInjection::manipulate_single_Value(float *value, uint8_t sens){
