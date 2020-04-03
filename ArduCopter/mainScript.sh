@@ -62,8 +62,9 @@ runTests(){
 	for ((i=1; i<= $nRep ; i++)); do
 		echo “Repetition $i”
 		
+		#TODO: Check if this redirection, together with the constant output of information is altering the behaviour of the emulator.
 		#start simulation
-		xterm -hold -e ~/ardupilot/Tools/autotest/sim_vehicle.py -j4 -l $lat,$lng,0,0 -S $EMULATION_SPEED &
+		xterm -hold -e "$HOME/ardupilot/Tools/autotest/sim_vehicle.py -j4 -l $lat,$lng,0,0 -S $EMULATION_SPEED > logs/faultLog_$currentMission.log 2>&1" &
 		
 		#Wait for SITL to boot up
 		sleep 30
