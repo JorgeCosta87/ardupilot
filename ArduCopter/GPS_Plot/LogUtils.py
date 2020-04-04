@@ -49,7 +49,7 @@ def GetMissionWaypoints(filename, takeoffH = "nan", landingH = "nan"):
     default.lat = float(split[8]);
 
     #if the base takeoff value is given then replace it, else keep the value given by default.
-    if type(takeoffH) == type(str):
+    if type(takeoffH) == str:
         default.alt = float(split[10]);
     else:
         default.alt = takeoffH;
@@ -108,6 +108,59 @@ def GetMissionWaypoints(filename, takeoffH = "nan", landingH = "nan"):
 
     file.close();
     return coords;
+
+
+from datetime import datetime
+
+def getFaultyPoints(timestampFilename, coordinatesFilename):
+    if not os.path.isfile(timestampFilename):
+        raise Exception("File" + timestampFilename + "does not exist");
+
+    if not os.path.isfile(coordinatesFilename):
+        raise Exception("File" + coordinatesFilename + "does not exist");
+
+    coordinates = open(coordinatesFilename, "rt");
+    timestamps = open(timestampFilename, "rt");
+    
+
+    x = [];
+    y = [];
+    z = [];
+
+    stampContents = timestamps.read().splitlines();
+    for line in stampContents:
+
+        tsSplit = line.split(":",1);
+        try:
+            stampTime = datetime.strptime(tsSplit[1], '%Y-%m-%d %H:%M:%S.%f');
+        except:
+            if ((len(x) % 2) != 0) and len(x) > 0:
+                x.pop();
+                y.pop();
+                z.pop();
+
+        while True:
+            coord = coordinates.readline();
+            if(coord == ""):
+                break;
+            
+            coordSplit = coord.split(",");
+            logTime = datetime.strptime(coordSplit[1], '%Y-%m-%d %H:%M:%S.%f');
+
+            if stampTime < logTime:
+                x.append(float(coordSplit[2]));
+                y.append(float(coordSplit[3]));
+                z.append(float(coordSplit[4]));
+                break;
+
+    timestamps.close();
+    coordinates.close();
+
+    return x, y, z;
+
+
+
+
 
 """
 #simple way to test GetMissionWaypoints

@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 #distance.calculate(); #https://geopy.readthedocs.io/en/stable/#module-geopy.distance
 
 #3dPlot libraries
@@ -21,6 +23,9 @@ import os.path
 parser = OptionParser("")
 parser.add_option("-f", "--file", dest="files",
     action="append", help="read GPS data from log files and plot on the graph");
+
+parser.add_option("-i", "--FaultInjection", dest="faultInjection",
+    action="append", help="Marks GPS intervals during which a fault was injected");
 
 parser.add_option("-m", "--mission", dest="mission",
     help="read data from mission file and plot mission on the graph");
@@ -105,6 +110,21 @@ if options.mission:
     #store landing data to calculate distance
     missionlanding = (y[-1],x[-1]);
 
+if options.faultInjection:
+
+   for i in range(len(options.faultInjection)):
+        #check if file exists
+        if not os.path.isfile(str(options.files[i])):
+            raise Exception("File " + options.files[i] + "does not exist");
+
+        if not os.path.isfile(options.faultInjection[i]):
+            raise Exception("File " + options.faultInjection[i] + "does not exist");
+
+        x,y,z = utils.getFaultyPoints(options.faultInjection[i],options.files[i]);
+
+        for j in range(1,len(x),2):
+            ax.plot([x[j],x[j+1]], [y[j],y[j+1]], [z[j],z[j+1]], color='#4b0082', linewidth=4, ls='-' ,dash_capstyle='round');
+
 if options.distance:
     if not options.mission or not options.files:
         raise Exception("Cannot calculate distance between landing zones, since both Mission file and at least one mission is required!");
@@ -112,6 +132,11 @@ if options.distance:
     for i in range(len(options.captions)):
         print runLandZones[i],"-",missionlanding;    
         print "Distance between \"",options.captions[i],"\"-LZ to \"",options.missionlabel,"\"-LZ: ",distance(runLandZones[i],missionlanding).meters,"m"
+
+
+ax.set_xlabel('Latitude')
+ax.set_ylabel('Longitude')
+ax.set_zlabel('Altitude')
 
 ax.legend()
 plt.show()
