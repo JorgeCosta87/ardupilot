@@ -32,6 +32,8 @@
 
 class AP_FaultInjection
 {
+    private:
+        static void log_fault_injection(const char * str);
 
     public:
 
