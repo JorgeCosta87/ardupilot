@@ -111,8 +111,7 @@ if options.mission:
     missionlanding = (y[-1],x[-1]);
 
 if options.faultInjection:
-
-   for i in range(len(options.faultInjection)):
+    for i in range(len(options.faultInjection)):
         #check if file exists
         if not os.path.isfile(str(options.files[i])):
             raise Exception("File " + options.files[i] + "does not exist");
@@ -120,10 +119,15 @@ if options.faultInjection:
         if not os.path.isfile(options.faultInjection[i]):
             raise Exception("File " + options.faultInjection[i] + "does not exist");
 
-        x,y,z = utils.getFaultyPoints(options.faultInjection[i],options.files[i]);
+        data = utils.getFaultyPoints(options.faultInjection[i],options.files[i]);
 
-        for j in range(1,len(x),2):
-            ax.plot([x[j],x[j+1]], [y[j],y[j+1]], [z[j],z[j+1]], color='#4b0082', linewidth=4, ls='-' ,dash_capstyle='round');
+        print len(data)
+        for element in data:
+            print element.x
+            print element.y
+            print element.z
+
+            ax.plot(element.x, element.y, element.z , color='#4b0082', linewidth=4, ls='-' ,dash_capstyle='round');
 
 if options.distance:
     if not options.mission or not options.files:

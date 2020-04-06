@@ -121,44 +121,59 @@ def getFaultyPoints(timestampFilename, coordinatesFilename):
 
     coordinates = open(coordinatesFilename, "rt");
     timestamps = open(timestampFilename, "rt");
-    
 
-    x = [];
-    y = [];
-    z = [];
+    #Tupple storage
+    faults = [];
 
     stampContents = timestamps.read().splitlines();
-    for line in stampContents:
 
-        tsSplit = line.split(":",1);
+    #Check if there's start and endpoints for all faults if not remove last point
+    if (len(stampContents) % 2) == 1:
+        myrange = len(stampContents) - 1;
+    else:
+        myrange = len(stampContents);
+
+    for i in range(0,myrange,2):
+        fault = namedtuple("coords", "x y z");
+        fault.x = [];
+        fault.y = [];
+        fault.z = [];
+
         try:
-            stampTime = datetime.strptime(tsSplit[1], '%Y-%m-%d %H:%M:%S.%f');
+            line = stampContents[i];
+            tsSplit = line.split(":",1);
+            injectionTimeStart = datetime.strptime(tsSplit[1], '%Y-%m-%d %H:%M:%S.%f');
+
+            line = stampContents[i+1];
+            tsSplit = line.split(":",1);
+            injectionTimeEnd = datetime.strptime(tsSplit[1], '%Y-%m-%d %H:%M:%S.%f');
+
         except:
             if ((len(x) % 2) != 0) and len(x) > 0:
                 x.pop();
                 y.pop();
                 z.pop();
+                break;
 
         while True:
             coord = coordinates.readline();
-            if(coord == ""):
-                break;
-            
             coordSplit = coord.split(",");
             logTime = datetime.strptime(coordSplit[1], '%Y-%m-%d %H:%M:%S.%f');
 
-            if stampTime < logTime:
-                x.append(float(coordSplit[2]));
-                y.append(float(coordSplit[3]));
-                z.append(float(coordSplit[4]));
+            if logTime >= injectionTimeStart and logTime <= injectionTimeEnd:
+                fault.x.append(float(coordSplit[2]));
+                fault.y.append(float(coordSplit[3]));
+                fault.z.append(float(coordSplit[4]));
+
+            elif logTime > injectionTimeEnd:
                 break;
+        
+        faults.append(fault);
 
     timestamps.close();
     coordinates.close();
 
-    return x, y, z;
-
-
+    return faults;
 
 
 
