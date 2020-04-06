@@ -111,6 +111,8 @@ if options.mission:
     missionlanding = (y[-1],x[-1]);
 
 if options.faultInjection:
+    first = True;
+
     for i in range(len(options.faultInjection)):
         #check if file exists
         if not os.path.isfile(str(options.files[i])):
@@ -120,14 +122,12 @@ if options.faultInjection:
             raise Exception("File " + options.faultInjection[i] + "does not exist");
 
         data = utils.getFaultyPoints(options.faultInjection[i],options.files[i]);
-
-        print len(data)
         for element in data:
-            print element.x
-            print element.y
-            print element.z
-
-            ax.plot(element.x, element.y, element.z , color='#4b0082', linewidth=4, ls='-' ,dash_capstyle='round');
+            if not first:
+                ax.plot(element.x, element.y, element.z , color='#4b0082', linewidth=4, ls='-' ,dash_capstyle='round');
+            else:
+                ax.plot(element.x, element.y, element.z , label= "Fault Occurence" ,color='#4b0082', linewidth=4, ls='-' ,dash_capstyle='round');
+                fist = False;
 
 if options.distance:
     if not options.mission or not options.files:
