@@ -55,7 +55,7 @@ def GetMissionWaypoints(filename, takeoffH = "nan", landingH = "nan"):
         default.alt = takeoffH;
     
 
-    last = namedtuple("coord", "x y z x1 y1 z1");
+    last = namedtuple("coord", "x y z x1 y1 z1 type");
     last.x1 = default.lng;
     last.y1 = default.lat;
     last.z1 = default.alt;
@@ -68,8 +68,9 @@ def GetMissionWaypoints(filename, takeoffH = "nan", landingH = "nan"):
         #The drone action
         action = int(split[3]);
 
+        data = namedtuple("coord", "x y z x1 y1 z1 type");
+
         if(action == waypoint):
-            data = namedtuple("coord", "x y z x1 y1 z1");
 
             #Get Current position
             data.x = last.x1;
@@ -81,13 +82,10 @@ def GetMissionWaypoints(filename, takeoffH = "nan", landingH = "nan"):
             data.y1 = float(split[8]);
             data.z1 = float(default.alt + float(split[10]));# TODO: this can screw up some stuff when there are more than 1 waypoint, needs testing
             
-            #points to last waypoint so that it's possible to calculate the next one
-            last = data;
-            coords.append(data);
+            data.type = 2;
 
 
-        if(action == takeoff or action == landing): #TODO: add RTL to this condition
-            data = namedtuple("coord", "x y z x1 y1 z1");
+        elif(action == takeoff or action == landing): #TODO: add RTL to this condition
             
             #Get Current position
             data.x = last.x1;
@@ -101,10 +99,13 @@ def GetMissionWaypoints(filename, takeoffH = "nan", landingH = "nan"):
 
             if(action == landing and type(landingH) != type(str)):#TODO: needs to be documented.
                 data.z1 = landingH;
+                data.type = 0;
+            else:
+                data.type = 1;
 
-            #points to last waypoint so that it's possible to calculate the next one
-            last = data;
-            coords.append(data);
+        #points to last waypoint so that it's possible to calculate the next one
+        last = data;
+        coords.append(data);
 
     file.close();
     return coords;
