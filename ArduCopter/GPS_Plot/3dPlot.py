@@ -13,6 +13,8 @@ from geopy.distance import distance
 
 #My library that parse the logs
 import LogUtils as utils
+import PointValidation as validation
+import MissionTimeUtils as timeutils
 
 #argument parsing sys libraries
 from optparse import OptionParser
@@ -92,23 +94,71 @@ if options.mission:
     else:
         mission = utils.GetMissionWaypoints(str(options.mission), firstH, lastH);
     
-    x = []; y = []; z = [];
+    X = []; Y = []; Z = [];
     for waypoint in mission:
-        x.append(waypoint.x);
-        x.append(waypoint.x1);
-        y.append(waypoint.y);
-        y.append(waypoint.y1);
-        z.append(waypoint.z);
-        z.append(waypoint.z1);
+        X.append(waypoint.x);
+        X.append(waypoint.x1);
+        Y.append(waypoint.y);
+        Y.append(waypoint.y1);
+        Z.append(waypoint.z);
+        Z.append(waypoint.z1);
 
-    ax.plot(x, y, z, label=options.missionlabel, color="red");
+
+    ax.plot(X, Y, Z, label=options.missionlabel, color="red");
     
     #Add "start and end" captions to graph
-    ax.text(x[0], y[0], z[0], "Start", color='green')
-    ax.text(x[-1], y[-1], z[-1], "End", color='red')
+    ax.text(X[0], Y[0], Z[0], "Start", color='green')
+    ax.text(X[-1], Y[-1], Z[-1], "End", color='red')
 
     #store landing data to calculate distance
-    missionlanding = (y[-1],x[-1]);
+    missionlanding = (Y[-1],X[-1]);
+    
+    #Status = 0 is ok, 1 is minor fault, 2 is major fault
+    STATUS = 0
+    for i in range(len(x)):
+        for J in range(0,len(X),2):
+            #Outter if checks for inner cylinder and Inner if checks for outmost cylider
+            #if the point is not inside the inner cilinder, check if it has surpassed the outter cylinder threshold
+            if  not validation.points_in_cylinder(np.array([X[J],Y[J],Z[J]]), np.array([X[J+1],Y[J+1],Z[J+1]]), 0.000001 * 3, np.array([x[i],y[i],z[i]])):
+                if not validation.points_in_cylinder(np.array([X[J],Y[J],Z[J]]), np.array([X[J+1],Y[J+1],Z[J+1]]), 0.000001 * 3 * 2, np.array([x[i],y[i],z[i]])):
+                    STATUS = 2
+                else:
+                    STATUS = 1
+            else:
+                STATUS = 0;
+                break;
+        
+        #if not found, check the spheres
+        if STATUS != 0:
+            break;
+
+        STATUS_SPHERE = 0;
+        for J in range(1,len(X)-1):
+            if validation.inSphere(np.array([x[i],y[i],z[i]]), np.array([X[J],Y[J],Z[J]]), 0.000001 * 3):
+                if validation.inSphere(np.array([x[i],y[i],z[i]]), np.array([X[J],Y[J],Z[J]]), 0.000001 * 3 * 2):
+                    STATUS_SPHERE = 2
+                else:
+                    STATUS_SPHERE = 1
+            else:
+                STATUS = 0;
+                break;
+
+        #Basically means that the point is between a inner sphere and outter sphere.
+        if STATUS_SPHERE < STATUS:
+            STATUS = STATUS_SPHERE;
+
+    if STATUS == 0:
+        ax.text2D(0.05, 0.95, "OK", color='green', transform=ax.transAxes)
+    elif STATUS == 1:
+        ax.text2D(0.05, 0.95, "Minor Fault", color='orange', transform=ax.transAxes)
+    else:
+        ax.text2D(0.05, 0.95, "Major Fault", color='red', transform=ax.transAxes)
+
+    #TODO: Remove this later, it's just a demo
+    time = timeutils.getEstimatedMissionTime(options.mission)
+    time = "Time: %.2f" % round(time,2);
+    ax.text2D(0.30, 0.95,time, color='blue', transform=ax.transAxes)
+
 
 if options.faultInjection:
     first = True;
