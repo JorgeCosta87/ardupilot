@@ -1,13 +1,19 @@
 #!/bin/bash
 
 usage(){
-	echo "usage: $0 <optional: speed of simulation [0-5]>"
+	echo "usage: $0 <optional: speed of simulation [0-5]> <option: output to console [1]>"
 }
 
 checkArguments(){
-	if (($# == 0 )) || (( $# > 1 )); then
+	if (($# == 0 )); then
 		EMULATION_SPEED=1
 		return;
+	fi
+
+	if [ $# == 2 ]; then
+		CONSOLE=true;
+	else
+		CONSOLE=false;
 	fi
 
 	re='^[0-9]+([.][0-9]+)?$'
@@ -64,8 +70,13 @@ runTests(){
 		
 		#TODO: Check if this redirection, together with the constant output of information is altering the behaviour of the emulator.
 		#start simulation
-		xterm -hold -e "$HOME/ardupilot/Tools/autotest/sim_vehicle.py -j4 -l $lat,$lng,0,0 -S $EMULATION_SPEED > logs/faultLog_$currentMission.log 2>&1" &
-		
+
+		if [ $CONSOLE==false ]; then
+			xterm -hold -e "$HOME/ardupilot/Tools/autotest/sim_vehicle.py -j4 -l $lat,$lng,0,0 -S $EMULATION_SPEED > logs/faultLog_$currentMission.log 2>&1" &
+		else
+			xterm -hold -e "$HOME/ardupilot/Tools/autotest/sim_vehicle.py -j4 -l $lat,$lng,0,0 -S $EMULATION_SPEED" &
+		fi
+
 		#Wait for SITL to boot up
 		sleep 30
 
