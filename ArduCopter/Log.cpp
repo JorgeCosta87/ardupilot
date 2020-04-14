@@ -155,6 +155,28 @@ void Copter::do_erase_logs(void)
     gcs().send_text(MAV_SEVERITY_INFO, "Log erase complete");
 }
 
+struct PACKED log_FaultInjection {
+    LOG_PACKET_HEADER;
+    uint64_t time_us;
+    float    x_value;
+    float    y_value;
+    float    z_value;
+
+};
+
+// Write an Autotune data packet
+void Copter::Log_Write_Fault_InjectionDetails(float x, float y, float z)
+{
+    struct log_FaultInjection pkt = {
+        LOG_PACKET_HEADER_INIT(LOG_FAULT_INJECTION),
+        time_us     : AP_HAL::micros64(),
+        x_value     : x,
+        y_value     : y,
+        z_value     : z
+    };
+    DataFlash.WriteBlock(&pkt, sizeof(log_FaultInjection));
+}
+
 #if AUTOTUNE_ENABLED == ENABLED
 struct PACKED log_AutoTune {
     LOG_PACKET_HEADER;
@@ -825,6 +847,8 @@ const struct LogStructure Copter::log_structure[] = {
       "GUID",  "QBffffff",    "TimeUS,Type,pX,pY,pZ,vX,vY,vZ" },
     { LOG_THROW_MSG, sizeof(log_Throw),
       "THRO",  "QBffffbbbb",  "TimeUS,Stage,Vel,VelZ,Acc,AccEfZ,Throw,AttOk,HgtOk,PosOk" },
+    { LOG_FAULT_INJECTION, sizeof(log_FaultInjection),
+      "INJT",  "Qfff",  "TimeUS,val_x,val_y,val_z" },
 };
 
 #if CLI_ENABLED == ENABLED

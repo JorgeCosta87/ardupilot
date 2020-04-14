@@ -30,7 +30,7 @@ parseArguments(){
 
     masks=();
     maskName=();
-    while getopts ":h f: s: abcgp" opt; do
+    while getopts ":h f: s: abcgpj" opt; do
         case $opt in
             f) #adding more files to parse
                 #check if file exists
@@ -117,6 +117,16 @@ parseArguments(){
                 gyroscope=true;
                 ;;
 
+            j)
+                if [ ! -z $injection ]; then
+                    continue;
+                fi
+
+                masks+=(": INJT {");
+                maskName+=("F_INJECTION");
+
+                local injection=true;
+                ;;
             
             h) #help message
                 usage
@@ -178,6 +188,11 @@ getSensorLogEntries(){
 
                 "MAG" | "MAG2")
                     data=$(echo "$stamp,${array[8]},${array[11]},${array[15]}");
+                    writeToFile
+                    ;;
+
+                "INJT")
+                    data=$(echo "$stamp,${array[8]},${array[11]},${array[14]}");
                     writeToFile
                     ;;
 

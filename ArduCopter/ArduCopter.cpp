@@ -653,6 +653,9 @@ void Copter::runtime_injection()
 
    // cliSerial = hal.console;
    // cliSerial->printf("Barometer\n");
+   if(AP_FaultInjection::isRunningFaultInjection){
+       copter.Log_Write_Fault_InjectionDetails(0.0,0.0,0.0);
+   }
 
     AP_FaultInjection::update();
 }

@@ -152,6 +152,7 @@ public:
     friend class AP_Arming_Copter;
 
     Copter(void);
+    void Log_Write_Fault_InjectionDetails(float x, float y, float z);
 
     // HAL::Callbacks implementation.
     void setup() override;

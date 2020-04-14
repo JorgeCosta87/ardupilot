@@ -30,6 +30,8 @@
 #define SENSOR_BARO                             3
 #define SENSOR_TEMP                             4
 
+class Copter;
+
 class AP_FaultInjection
 {
     private:

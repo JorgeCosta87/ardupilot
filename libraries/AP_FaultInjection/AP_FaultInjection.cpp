@@ -1,12 +1,9 @@
 #include <random>
-#include <stdio.h>
-#include <chrono>
-
-#include <AP_HAL/AP_HAL.h>
 
 #include "AP_FaultInjection.h"
+#include "../../ArduCopter/Copter.h"
 
-extern AP_HAL::HAL& hal;
+//extern AP_HAL::HAL& hal;
 
 bool AP_FaultInjection::isEnableFaultInjection = false;
 bool AP_FaultInjection::isRunningFaultInjection = false;
@@ -107,21 +104,6 @@ void AP_FaultInjection::loadValues(
 */
 }
 
-//TODO: This needs to be faster, basically use micros and leave the parsing for the python script
-void AP_FaultInjection::log_fault_injection(const char * str){
-    auto now = std::chrono::system_clock::now();
-    auto nowMs = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
-
-    time_t rawtime = std::chrono::system_clock::to_time_t(now);
-
-    struct tm * timeinfo;
-    char buffer [80];
-    timeinfo = localtime (&rawtime);
-    strftime (buffer, 80,"%Y-%m-%d %H:%M:%S",timeinfo);
-
-    hal.console->printf("\n%s:%s.%d\n",str,buffer,(int) (nowMs.count() /10));
-}
-
 void AP_FaultInjection::update()
 {
     if(isEnableFaultInjection)
@@ -131,7 +113,7 @@ void AP_FaultInjection::update()
             if(AP_HAL::millis() > time_to_stop && duration != INFINITE)
             {
                 stop_fault_injection();
-                log_fault_injection("end_fault_injection");
+                //log_fault_injection("end_fault_injection");
             }
         }
         else{
@@ -139,7 +121,7 @@ void AP_FaultInjection::update()
             {
                 wp_fault_triggered = current_WP;
                 start_fault_injection();
-                log_fault_injection("start_fault_injection");
+                // log_fault_injection("start_fault_injection");
             }
         }
     }
