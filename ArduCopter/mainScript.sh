@@ -71,7 +71,7 @@ runTests(){
 		#TODO: Check if this redirection, together with the constant output of information is altering the behaviour of the emulator.
 		#start simulation
 
-		if [ $CONSOLE==false ]; then
+		if [ $CONSOLE == false ]; then
 			xterm -hold -e "$HOME/ardupilot/Tools/autotest/sim_vehicle.py -j4 -l $lat,$lng,0,0 -S $EMULATION_SPEED > logs/faultLog_$currentMission.log 2>&1" &
 		else
 			xterm -hold -e "$HOME/ardupilot/Tools/autotest/sim_vehicle.py -j4 -l $lat,$lng,0,0 -S $EMULATION_SPEED" &
