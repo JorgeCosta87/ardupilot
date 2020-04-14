@@ -14,13 +14,13 @@ from geopy.distance import distance
 #My library that parse the logs
 import LogUtils as utils
 import PointValidation as validation
+from PointValidation import State
 import MissionTimeUtils as timeutils
 
 #argument parsing sys libraries
 from optparse import OptionParser
 import sys
 import os.path
-
 
 parser = OptionParser("")
 parser.add_option("-f", "--file", dest="files",
@@ -39,7 +39,11 @@ parser.add_option("-c", "--caption", dest="captions",
     action="append",help="Adds caption for each file to plot");
 
 parser.add_option("-d", "--distance", action="store_true",
+    help="shows distance between test landzone and mission landzone",
     default="store_false",dest="distance");
+
+parser.add_option("-t", "--time", action="store_true",dest="time",
+    help="shows the estimated time for the completion of the selected mission");
 
 (options, args) = parser.parse_args();
 
@@ -94,7 +98,7 @@ if options.mission:
     else:
         mission = utils.GetMissionWaypoints(str(options.mission), firstH, lastH);
     
-    X = []; Y = []; Z = [];
+    X = []; Y = []; Z = []; wp_type = [];
     for waypoint in mission:
         X.append(waypoint.x);
         X.append(waypoint.x1);
@@ -102,6 +106,7 @@ if options.mission:
         Y.append(waypoint.y1);
         Z.append(waypoint.z);
         Z.append(waypoint.z1);
+        wp_type.append(waypoint.type);
 
 
     ax.plot(X, Y, Z, label=options.missionlabel, color="red");
@@ -112,40 +117,22 @@ if options.mission:
 
     #store landing data to calculate distance
     missionlanding = (Y[-1],X[-1]);
-    
-    #Status = 0 is ok, 1 is minor fault, 2 is major fault
+
     STATUS = 0
+    error_x = []; error_y = []; error_z = []
+    #for each point in the logs
     for i in range(len(x)):
-        for J in range(0,len(X),2):
-            #Outter if checks for inner cylinder and Inner if checks for outmost cylider
-            #if the point is not inside the inner cilinder, check if it has surpassed the outter cylinder threshold
-            if  not validation.points_in_cylinder(np.array([X[J],Y[J],Z[J]]), np.array([X[J+1],Y[J+1],Z[J+1]]), 0.000001 * 3, np.array([x[i],y[i],z[i]])):
-                if not validation.points_in_cylinder(np.array([X[J],Y[J],Z[J]]), np.array([X[J+1],Y[J+1],Z[J+1]]), 0.000001 * 3 * 2, np.array([x[i],y[i],z[i]])):
-                    STATUS = 2
-                else:
-                    STATUS = 1
-            else:
-                STATUS = 0;
-                break;
-        
-        #if not found, check the spheres
-        if STATUS != 0:
-            break;
+        TEMP_STATUS = validation.get_point_status(np.array([x[i],y[i],z[i]]), X, Y, Z, wp_type)
 
-        STATUS_SPHERE = 0;
-        for J in range(1,len(X)-1):
-            if validation.inSphere(np.array([x[i],y[i],z[i]]), np.array([X[J],Y[J],Z[J]]), 0.000001 * 3):
-                if validation.inSphere(np.array([x[i],y[i],z[i]]), np.array([X[J],Y[J],Z[J]]), 0.000001 * 3 * 2):
-                    STATUS_SPHERE = 2
-                else:
-                    STATUS_SPHERE = 1
-            else:
-                STATUS = 0;
-                break;
+        if TEMP_STATUS != State.NORMAL:
+            STATUS = TEMP_STATUS
 
-        #Basically means that the point is between a inner sphere and outter sphere.
-        if STATUS_SPHERE < STATUS:
-            STATUS = STATUS_SPHERE;
+            error_x += [x[i]]
+            error_y += [y[i]]
+            error_z += [z[i]]
+
+            if TEMP_STATUS == State.MAJOR_FAULT:
+                break;
 
     if STATUS == 0:
         ax.text2D(0.05, 0.95, "OK", color='green', transform=ax.transAxes)
@@ -154,10 +141,8 @@ if options.mission:
     else:
         ax.text2D(0.05, 0.95, "Major Fault", color='red', transform=ax.transAxes)
 
-    #TODO: Remove this later, it's just a demo
-    time = timeutils.getEstimatedMissionTime(options.mission)
-    time = "Time: %.2f" % round(time,2);
-    ax.text2D(0.30, 0.95,time, color='blue', transform=ax.transAxes)
+    if(len(error_x) > 0):
+        ax.plot(error_x,error_y,error_z, 'o', color='red', label='Point of error')
 
 
 if options.faultInjection:
@@ -184,8 +169,13 @@ if options.distance:
         raise Exception("Cannot calculate distance between landing zones, since both Mission file and at least one mission is required!");
     
     for i in range(len(options.captions)):
-        print runLandZones[i],"-",missionlanding;    
-        print "Distance between \"",options.captions[i],"\"-LZ to \"",options.missionlabel,"\"-LZ: ",distance(runLandZones[i],missionlanding).meters,"m"
+        print "Distance between \"%s-LZ\" to \"%s-LZ\" is: %.3fm" % (options.captions[i],options.missionlabel,round(distance(runLandZones[i],missionlanding).meters,3))
+
+
+if options.time and options.mission:
+    time = timeutils.getEstimatedMissionTime(options.mission)
+    time = "Time: %.2f" % round(time,2);
+    ax.text2D(0.30, 0.95,time, color='blue', transform=ax.transAxes)
 
 
 ax.set_xlabel('Latitude')
