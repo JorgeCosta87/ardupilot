@@ -55,7 +55,7 @@ def GetMissionWaypoints(filename, takeoffH = "nan", landingH = "nan"):
     default.lat = float(split[8]);
 
     #if the base takeoff value is given then replace it, else keep the value given by default.
-    if type(takeoffH) == str:
+    if type(takeoffH) is str:
         default.alt = float(split[10]);
     else:
         default.alt = takeoffH;
@@ -90,7 +90,11 @@ def GetMissionWaypoints(filename, takeoffH = "nan", landingH = "nan"):
             
             #if the drone is going up and down in the exact same position
             if data.x == data.x1 and data.y == data.y1:
-                data.type = WPaction.VERTICAL
+                if data.z < data.z1:
+                    data.type = WPaction.VERTICAL_UP
+                else:
+                    data.type = WPaction.VERTICAL_DOWN
+
             else:
                 data.type = WPaction.HORIZONTAL
 
@@ -109,7 +113,7 @@ def GetMissionWaypoints(filename, takeoffH = "nan", landingH = "nan"):
 
             data.type = WPaction.VERTICAL_UP
 
-            if(action == landing and type(landingH) != type(str)):
+            if(action == landing and type(landingH) is not str):
                 data.z1 = landingH;
                 data.type = WPaction.VERTICAL_DOWN
 

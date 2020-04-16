@@ -193,6 +193,11 @@ from dronekit import connect, VehicleMode
 import os.path
 import sys, csv
 
+# Import mission time estimate helper
+sys.path.insert(1, 'GPS_Plot')
+
+import MissionTimeUtils as utils
+
 print " Start simulator (SITL)"
 
 
@@ -211,7 +216,7 @@ upload_mission('Missions/' + missionName)
 
 
 # Arm and Takeoff
-arm_and_takeoff(1.5)
+arm_and_takeoff(0.2)
 
 print "Starting mission"
 # Reset mission set to first (0) waypoint
@@ -226,10 +231,11 @@ print " Mode: %s" % vehicle.mode.name
 # Uses distance_to_current_waypoint(), a convenience function for finding the 
 #   distance to the next waypoint.
 
+crash = 'N'
+time_limit = utils.getEstimatedMissionTime('Missions/' + missionName) * 1.5 #added extra 50% of estimated time as a error margin.
 nextwaypoint=vehicle.commands.next
 lastWP = nextwaypoint
 start_time = time.time()
-crash = 'N'
 
 while nextwaypoint <= vehicle.commands.count:
 
@@ -245,13 +251,13 @@ while nextwaypoint <= vehicle.commands.count:
         break;
 
     #Track the duration of each WP
-    if(lastWP != nextwaypoint):
-        start_time = time.time()
+    #if(lastWP != nextwaypoint):
+    #    start_time = time.time()
     
-    #After 60 seconds in the same WP let's assume that we had a crash
-    #if((time.time() - start_time) >= 60):
-     #   crash = 'Y'
-     #   break;
+    #if the drone takes more time to finish a mission than the estimated, we assume a crash ensued
+    if((time.time() - start_time) >= time_limit):
+        crash = 'Y'
+        break;
 
     print 'Distance to waypoint (%s): %s' % (nextwaypoint, distance_to_current_waypoint())
 
