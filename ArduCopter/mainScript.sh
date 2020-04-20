@@ -101,12 +101,12 @@ handleLogs(){
 
 	mv "logs/"*.BIN $rawLog;
 
-	./GPS_Plot/ExtractLog.sh -f "$rawLog" -s "$unfilteredLog";
-	./GPS_Plot/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/gps.log" -p;
+	./Utils/ExtractLog.sh -f "$rawLog" -s "$unfilteredLog";
+	./Utils/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/gps.log" -p;
 
 	#if fault injection is active then extract the fault injection logs
 	if ((${array[1]} == 1)); then
-		./GPS_Plot/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/faultUnfiltered.log" -j;
+		./Utils/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/faultUnfiltered.log" -j;
 
 		#remove unnecessary entrances from fault.log
 		sed -e 1b -e '$!d' "$runFolder/faultUnfiltered.log" > "$runFolder/fault.log"

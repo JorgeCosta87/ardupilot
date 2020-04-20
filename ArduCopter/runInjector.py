@@ -194,7 +194,7 @@ import os.path
 import sys, csv
 
 # Import mission time estimate helper
-sys.path.insert(1, 'GPS_Plot')
+sys.path.insert(1, 'Utils')
 
 import MissionTimeUtils as utils
 
