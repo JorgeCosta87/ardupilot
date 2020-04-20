@@ -9,6 +9,7 @@ usage(){
     printf " -a  Accelerometer\n"
     printf " -b  Barometer\n"
     printf " -c  Compass\n"
+    printf " -j  Fault Injection\n"
     printf " -p  GPS\033[0;40m\n\n";
     printf "\033[1;40mExamples:\033[0m\n\033[1;32;40m$0 -f file.log -s savefile.txt -abcgp\033[0;40m\n";
 	printf "\033[1;32;40m$0 -f file.log -g -a\033[0m\n\n";
@@ -117,7 +118,7 @@ parseArguments(){
                 gyroscope=true;
                 ;;
 
-            j)
+            j) #Fault injection
                 if [ ! -z $injection ]; then
                     continue;
                 fi

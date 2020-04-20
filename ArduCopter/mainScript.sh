@@ -10,7 +10,7 @@ checkArguments(){
 		return;
 	fi
 
-	if [ $# == 2 ]; then
+	if (($# == 2)); then
 		CONSOLE=true;
 	else
 		CONSOLE=false;
@@ -40,6 +40,14 @@ askForInput(){
 
 	#this is here for commodity of not creating a function just for it
 	currentMission=1
+
+	if (( $nFault < 1 )); then
+		nFault=1
+	fi
+
+	if (( $nRep < 1 )); then
+		nRep=1
+	fi
 }
 
 killProcesses(){
@@ -50,6 +58,17 @@ killProcesses(){
 
 	#wait a while for the processes to be killed
 	sleep 10
+}
+
+fileExists(){
+	if [ ! -f $1 ]; then
+		printf "\033[1;91mMission file \033[0;1m'$1'\033[1;91mdoes not exist, quitting...\033[0m\n"
+		exit 1;
+	fi
+}
+
+getTimestap(){
+	timestamp=$(date +"%d%m%Y_%H%M%S")
 }
 
 getMissionCoordinatesFromMissionFile() {
@@ -64,24 +83,62 @@ getMissionCoordinatesFromMissionFile() {
 	} < $1
 }
 
+createRepetitionFolders(){
+	if (($nRep > 1)); then
+		runFolder="$missionLogFolder""/Run_$1"
+
+		if [ ! -d $runFolder ]; then
+			mkdir $runFolder
+		fi
+	else
+		runFolder="$missionLogFolder"
+	fi
+}
+
+handleLogs(){
+	local rawLog="$runFolder/log.bin"
+	local unfilteredLog="$runFolder/unfilteredLog.log"
+
+	mv "logs/"*.BIN $rawLog;
+
+	./GPS_Plot/ExtractLog.sh -f "$rawLog" -s "$unfilteredLog";
+	./GPS_Plot/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/gps.log" -p;
+
+	#if fault injection is active then extract the fault injection logs
+	if ((${array[1]} == 1)); then
+		./GPS_Plot/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/faultUnfiltered.log" -j;
+
+		#remove unnecessary entrances from fault.log
+		sed -e 1b -e '$!d' "$runFolder/faultUnfiltered.log" > "$runFolder/fault.log"
+	fi
+
+	if [ "$CONSOLE" == false ]; then
+		mv "logs/faultLog_$currentMission.log" "$runFolder/console.log";
+	fi
+
+	mv "logs/simulations_report.csv" "$runFolder/";
+	rm "logs/"*.TXT;
+}
+
 runTests(){
 	for ((i=1; i<= $nRep ; i++)); do
 		echo “Repetition $i”
 		
-		#TODO: Check if this redirection, together with the constant output of information is altering the behaviour of the emulator.
-		#start simulation
+		#Create folder for current repetition
+		createRepetitionFolders $i
 
-		if [ $CONSOLE == false ]; then
-			xterm -hold -e "$HOME/ardupilot/Tools/autotest/sim_vehicle.py -j4 -l $lat,$lng,0,0 -S $EMULATION_SPEED > logs/faultLog_$currentMission.log 2>&1" &
+		#start simulation
+		if [ ! "$CONSOLE" = true ]; then
+			xterm -hold -e "$HOME/ardupilot/Tools/autotest/sim_vehicle.py -j4 -l $lat,$lng,0,0 -S $EMULATION_SPEED > logs/faultLog_$currentMission.log 2>&1" & &>/dev/null
 		else
-			xterm -hold -e "$HOME/ardupilot/Tools/autotest/sim_vehicle.py -j4 -l $lat,$lng,0,0 -S $EMULATION_SPEED" &
+			xterm -hold -e "$HOME/ardupilot/Tools/autotest/sim_vehicle.py -j4 -l $lat,$lng,0,0 -S $EMULATION_SPEED" & &>/dev/null
 		fi
 
 		#Wait for SITL to boot up
 		sleep 30
 
 		#Start fault injector, This does not mean it will inject faults.
-		start=$SECONDS
+		start=$SECONDS	
 		python runInjector.py $currentMission
 
 		#Show duration of experiment
@@ -89,7 +146,47 @@ runTests(){
 		echo “Experiment $a took $duration seconds”
 		
 		killProcesses
+
+		#move logs to current repetition folder and unpack them
+		handleLogs
+
 	done
+}
+
+#This creates the top level folder that will hold all the experiments of the execution
+createExperimentsFolder(){
+	getTimestap
+
+	if (($nFault > 1)); then
+		mainLogPath="logs/Experiments_$timestamp"
+	else
+		mainLogPath="logs/Experiment_$timestamp"
+	fi
+
+	if [ ! -d $mainLogPath ]; then
+		mkdir $mainLogPath
+	fi
+}
+
+createMissionFolder(){
+	missionName="${1%.*}"
+	missionName="${missionName// /_}"
+
+	if (($nFault > 1)); then
+		missionLogFolder=$mainLogPath"/"$missionName"_"$currentMission
+
+		if [ ! -d $missionLogFolder ]; then
+			mkdir $missionLogFolder
+		fi
+	else
+		mv $mainLogPath "logs/Experiment_$timestamp""_""$missionName"
+		
+		mainLogPath="logs/Experiment_$timestamp""_""$missionName"
+		missionLogFolder="$mainLogPath"
+	fi
+
+	#copy mission file to current missionLogFolder
+	cp $missionFilename $missionLogFolder
 }
 
 main(){
@@ -97,6 +194,10 @@ main(){
 	askForInput
 
 	{ #This is required so the redirection know it's targets
+
+		#Create experiments folder that will hold all the experiments for each run
+		createExperimentsFolder
+
 		read #Reads header of file
 		while [ $currentMission -le $nFault ]; do
 		
@@ -104,10 +205,16 @@ main(){
 			read -ra array;
 			
 			#get current mission running
-			filename="$HOME/ardupilot/ArduCopter/Missions/${array[2]}"
+			missionFilename="$HOME/ardupilot/ArduCopter/Missions/${array[2]}"
 			
+			#check if mission file exists before going further
+			fileExists $missionFilename
+
+			#Create mission folder
+			createMissionFolder "${array[2]}"
+
 			#Gets lat and long from mission file
-			getMissionCoordinatesFromMissionFile $filename
+			getMissionCoordinatesFromMissionFile $missionFilename
 
 			#Run mission with n repetitions
 			echo "Running mission $currentMission: ${array[2]},  with $nRep repetitions"
