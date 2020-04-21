@@ -1,5 +1,7 @@
 import numpy as np
 from LogUtils import WPaction
+import LogUtils as utils
+import os.path
 from enum import IntEnum
 
 def points_in_cylinder(pt1, pt2, r, q):
@@ -77,3 +79,48 @@ def get_point_status(point, wp_x, wp_y, wp_z, wp_type):
             return State.MINOR_FAULT
     
     return State.MAJOR_FAULT
+
+
+def EvaluateMission(mission_path, run):
+
+    #check if files are valid
+    if not os.path.isfile(mission_path):
+        raise Exception('File\'' + mission_path + '\'does not exist');
+
+    if not os.path.isfile(run):
+        raise Exception('File\'' + run + '\'does not exist');
+
+    #get gps values from logs
+    x,y,z = utils.GetGPSData(run);
+    
+    #get mission coordinates
+    mission = utils.GetMissionWaypoints(mission_path, z[0], z[-1]);
+    
+    X = []; Y = []; Z = []; wp_type = [];
+    for waypoint in mission:
+        X.append(waypoint.x);
+        X.append(waypoint.x1);
+        Y.append(waypoint.y);
+        Y.append(waypoint.y1);
+        Z.append(waypoint.z);
+        Z.append(waypoint.z1);
+        wp_type.append(waypoint.type);
+
+    ##Evaluate mission
+    STATUS = 0
+    error_x = []; error_y = []; error_z = []
+    #for each point in the logs
+    for i in range(len(x)):
+        TEMP_STATUS = get_point_status(np.array([x[i],y[i],z[i]]), X, Y, Z, wp_type)
+
+        if TEMP_STATUS != State.NORMAL:
+            STATUS = TEMP_STATUS
+
+            error_x += [x[i]]
+            error_y += [y[i]]
+            error_z += [z[i]]
+
+            if TEMP_STATUS == State.MAJOR_FAULT:
+                break;
+
+    return STATUS;

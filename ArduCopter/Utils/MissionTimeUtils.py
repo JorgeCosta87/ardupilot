@@ -6,8 +6,8 @@ import math
 def calculate_acceleration(dist_xy, dist_z, vel, accel_xy, accel_z):
     return math.sqrt( (vel ** 2) / (((accel_xy * dist_xy) ** 2) + ((accel_z * dist_z) ** 2)) )
 
-def getEstimatedMissionTime(filename, accel_xy = 100, accel_z = 100, up_speed = 2.5, dn_speed = 1.5, wp_speed = 5.0, emulation_speed = 1):
-    waypointSpeed = ([up_speed * emulation_speed, dn_speed * emulation_speed, wp_speed * emulation_speed])
+def getEstimatedMissionTime(filename, emulation_speed = 1, accel_xy = 100, accel_z = 100, up_speed = 2.5, dn_speed = 1.5, wp_speed = 5.0):
+    waypointSpeed = ([up_speed, dn_speed, wp_speed])
     time_in_seconds = 0
 
     #Since we aren't compensating for gravity, we use these constants to simulate the error caused by it
@@ -47,4 +47,4 @@ def getEstimatedMissionTime(filename, accel_xy = 100, accel_z = 100, up_speed = 
             time_in_seconds += (z_distance * GRAVITY_Z)
             time_in_seconds += accelTime * 2
 
-    return time_in_seconds;
+    return time_in_seconds / emulation_speed;
