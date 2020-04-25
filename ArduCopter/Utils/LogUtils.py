@@ -31,7 +31,7 @@ class WPaction(IntEnum):
     HORIZONTAL      = 2
     
 
-def GetMissionWaypoints(filename, takeoffH = "nan", landingH = "nan"):
+def GetMissionWaypoints(filename):
     if not os.path.isfile(filename):
         raise Exception('File' + filename + 'does not exist');
     
@@ -53,12 +53,8 @@ def GetMissionWaypoints(filename, takeoffH = "nan", landingH = "nan"):
     default = namedtuple("coord", "lng lat alt");
     default.lng = float(split[9]);
     default.lat = float(split[8]);
-
-    #if the base takeoff value is given then replace it, else keep the value given by default.
-    if type(takeoffH) is str:
-        default.alt = float(split[10]);
-    else:
-        default.alt = takeoffH;
+    default.alt = float(0);
+    initialHeight = float(split[10]);
     
 
     last = namedtuple("coord", "x y z x1 y1 z1 type");
@@ -113,8 +109,8 @@ def GetMissionWaypoints(filename, takeoffH = "nan", landingH = "nan"):
 
             data.type = WPaction.VERTICAL_UP
 
-            if(action == landing and type(landingH) is not str):
-                data.z1 = landingH;
+            if(action == landing):
+                data.z1 = -(initialHeight - float(split[10]))
                 data.type = WPaction.VERTICAL_DOWN
 
         #points to last waypoint so that it's possible to calculate the next one

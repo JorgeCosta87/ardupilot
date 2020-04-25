@@ -40,10 +40,14 @@ parser.add_option("-c", "--caption", dest="captions",
 
 parser.add_option("-d", "--distance", action="store_true",
     help="shows distance between test landzone and mission landzone",
-    default="store_false",dest="distance");
+    dest="distance");
 
 parser.add_option("-t", "--time", action="store_true",dest="time",
     help="shows the estimated time for the completion of the selected mission");
+
+parser.add_option("-e", "--eval", action="store_true",dest="eval",
+    help="show evaluation of a specific mission");
+
 
 (options, args) = parser.parse_args();
 
@@ -76,13 +80,6 @@ if options.files:
         #values are stored here so we can calculate the distances later
         runLandZones.append((y[-1],x[-1]));
 
-        #get lowest values for taking off and landing (this is simple to compesate for mission planner's error)
-        if z[0] < firstH:
-            firstH = z[0];
-        
-        if z[-1] < lastH:
-            lastH = z[-1];
-
 
 if options.mission:
 
@@ -93,10 +90,7 @@ if options.mission:
     if not os.path.isfile(str(options.mission)):
         raise Exception("File " + str(options.mission) + "does not exist");
 
-    if not options.files:
-        mission = utils.GetMissionWaypoints(str(options.mission));
-    else:
-        mission = utils.GetMissionWaypoints(str(options.mission), firstH, lastH);
+    mission = utils.GetMissionWaypoints(str(options.mission))
     
     X = []; Y = []; Z = []; wp_type = [];
     for waypoint in mission:
@@ -118,6 +112,8 @@ if options.mission:
     #store landing data to calculate distance
     missionlanding = (Y[-1],X[-1]);
 
+
+if options.eval and options.mission and options.files:
     STATUS = 0
     error_x = []; error_y = []; error_z = []
     #for each point in the logs
