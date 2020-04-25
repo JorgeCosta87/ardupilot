@@ -37,7 +37,7 @@ def get_point_status(point, wp_x, wp_y, wp_z, wp_type):
     GPS_NORMAL_RADIUS = (0.000001 * 10) - (0.0000001 * 10) #Exactly 1 meter
 
     #The minor fault boundary limit is equal to 150% of the normal gps boudary
-    GPS_HIGH_RADIUS = GPS_NORMAL_RADIUS * 1.50 #Exactly 1.5 meters
+    GPS_HIGH_RADIUS = GPS_NORMAL_RADIUS * 2 #Exactly 2 meters
 
     #Since the Altitude is measured in meters, we use M_RADIUS as the meter radius. It contains the largest radius. 
     M_RADIUS = 1.5 #Meter
