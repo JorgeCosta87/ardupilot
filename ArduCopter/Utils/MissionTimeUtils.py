@@ -47,4 +47,4 @@ def getEstimatedMissionTime(filename, emulation_speed = 1, accel_xy = 100, accel
             time_in_seconds += (z_distance * GRAVITY_Z)
             time_in_seconds += accelTime * 2
 
-    return time_in_seconds / emulation_speed;
+    return time_in_seconds / int(emulation_speed);

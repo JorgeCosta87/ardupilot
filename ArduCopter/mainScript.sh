@@ -191,7 +191,7 @@ writeResults(){
 		result=$(python Utils/EvaluateMission.py "$missionFilename" "$runFolder/gps.log")
 	fi
 
-	printf "$missionFilename,$injection,$sensor,$result\n" >> "$resultFile"
+	printf "${array[2]},$injection,$sensor,$result\n" >> "$resultFile"
 }
 
 runTests(){

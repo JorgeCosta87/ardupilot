@@ -232,7 +232,7 @@ print " Mode: %s" % vehicle.mode.name
 #   distance to the next waypoint.
 
 crash = 'N'
-time_limit = utils.getEstimatedMissionTime('Missions/' + missionName) * 1.5 #added extra 50% of estimated time as a error margin.
+time_limit = utils.getEstimatedMissionTime('Missions/' + missionName, argv[2]) * 1.5 #added extra 50% of estimated time as a error margin.
 nextwaypoint=vehicle.commands.next
 lastWP = nextwaypoint
 start_time = time.time()

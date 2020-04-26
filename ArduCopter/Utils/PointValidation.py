@@ -107,7 +107,7 @@ def EvaluateMission(mission_path, run):
         wp_type.append(waypoint.type);
 
     ##Evaluate mission
-    STATUS = 0
+    STATUS = State.NORMAL
     error_x = []; error_y = []; error_z = []
     #for each point in the logs
     for i in range(len(x)):

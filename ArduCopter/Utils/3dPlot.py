@@ -114,7 +114,7 @@ if options.mission:
 
 
 if options.eval and options.mission and options.files:
-    STATUS = 0
+    STATUS = State.NORMAL
     error_x = []; error_y = []; error_z = []
     #for each point in the logs
     for i in range(len(x)):
@@ -130,9 +130,9 @@ if options.eval and options.mission and options.files:
             if TEMP_STATUS == State.MAJOR_FAULT:
                 break;
 
-    if STATUS == 0:
+    if STATUS == State.NORMAL:
         ax.text2D(0.05, 0.95, "OK", color='green', transform=ax.transAxes)
-    elif STATUS == 1:
+    elif STATUS == State.MINOR_FAULT:
         ax.text2D(0.05, 0.95, "Minor Fault", color='orange', transform=ax.transAxes)
     else:
         ax.text2D(0.05, 0.95, "Major Fault", color='red', transform=ax.transAxes)
