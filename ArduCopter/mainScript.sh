@@ -120,6 +120,80 @@ handleLogs(){
 	rm "logs/"*.TXT;
 }
 
+CrashCheck() {
+
+	{
+		IFS=";"
+		read
+		read -ra pos
+		crash=${pos[3]};
+	} < "$runFolder/simulations_report.csv"
+
+	if [ "$crash" == "N" ]; then
+		crashCount=$(grep "$runFolder/console.log" | wc -l)
+
+		if (($crashCount > 0)); then
+			crash="Y"
+		fi
+	fi
+}
+
+writeResults(){
+	resultFile="$mainLogPath/Results.csv"
+	
+	local sensor
+	local injection
+	local result
+
+	#if log file doesn't exist, write header and create file.
+	if [ ! -f "$resultFile" ]; then
+		printf "MISSION_NAME,INJECTION_ACTIVE,SENSOR,MISSION_RESULT\n" > "$resultFile"
+	fi
+
+	if [ "${array[1]}" == 1 ]; then
+		injection="TRUE"
+
+		case ${array[4]} in
+			0)
+				sensor="COMPASS"
+				;;
+
+			1)
+				sensor="GYROSCOPE"
+				;;
+			
+			2)
+				sensor="ACCELEROMETER"
+				;;
+			
+			3)
+				sensor="BAROMETER"
+				;;
+			
+			4)
+				sensor="TEMPERATURE"
+				;;
+
+			?)
+				sensor="UNKNOWN"
+				;;
+		esac
+	else
+		injection="FALSE"
+		sensor="NONE"
+	fi
+
+	#Check if drone crashed
+	CrashCheck
+	if [ "$crash" == "Y" ]; then
+		result="CRASH"
+	else
+		result=$(python Utils/EvaluateMission.py "$missionFilename" "$runFolder/gps.log")
+	fi
+
+	printf "$missionFilename,$injection,$sensor,$result\n" >> "$resultFile"
+}
+
 runTests(){
 	for ((i=1; i<= $nRep ; i++)); do
 		echo “Repetition $i”
@@ -129,9 +203,9 @@ runTests(){
 
 		#start simulation
 		if [ ! "$CONSOLE" = true ]; then
-			xterm -hold -e "$HOME/ardupilot/Tools/autotest/sim_vehicle.py -j4 -l $lat,$lng,0,0 -S $EMULATION_SPEED > logs/faultLog_$currentMission.log 2>&1" & &>/dev/null
+			xterm -hold -e "$HOME/ardupilot/Tools/autotest/sim_vehicle.py -j4 -l $lat,$lng,0,0 -S $EMULATION_SPEED > logs/faultLog_$currentMission.log 2>&1" &
 		else
-			xterm -hold -e "$HOME/ardupilot/Tools/autotest/sim_vehicle.py -j4 -l $lat,$lng,0,0 -S $EMULATION_SPEED" & &>/dev/null
+			xterm -hold -e "$HOME/ardupilot/Tools/autotest/sim_vehicle.py -j4 -l $lat,$lng,0,0 -S $EMULATION_SPEED" &
 		fi
 
 		#Wait for SITL to boot up
@@ -139,7 +213,7 @@ runTests(){
 
 		#Start fault injector, This does not mean it will inject faults.
 		start=$SECONDS	
-		python runInjector.py $currentMission
+		python runInjector.py $currentMission $EMULATION_SPEED
 
 		#Show duration of experiment
 		duration=$((SECONDS-start))
@@ -149,6 +223,8 @@ runTests(){
 
 		#move logs to current repetition folder and unpack them
 		handleLogs
+		#write results to file
+		writeResults
 
 	done
 }
@@ -186,7 +262,7 @@ createMissionFolder(){
 	fi
 
 	#copy mission file to current missionLogFolder
-	cp $missionFilename $missionLogFolder
+	cp $missionFilename "$missionLogFolder/$missionName""_mission.txt"
 }
 
 main(){

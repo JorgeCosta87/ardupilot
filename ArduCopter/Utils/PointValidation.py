@@ -94,7 +94,7 @@ def EvaluateMission(mission_path, run):
     x,y,z = utils.GetGPSData(run);
     
     #get mission coordinates
-    mission = utils.GetMissionWaypoints(mission_path, z[0], z[-1]);
+    mission = utils.GetMissionWaypoints(mission_path);
     
     X = []; Y = []; Z = []; wp_type = [];
     for waypoint in mission:
