@@ -32,9 +32,6 @@ parser.add_option("-i", "--FaultInjection", dest="faultInjection",
 parser.add_option("-m", "--mission", dest="mission",
     help="read data from mission file and plot mission on the graph");
 
-parser.add_option("-l", "--mission_label", dest="missionlabel",
-    help="read data from mission files and plot on the graph");
-
 parser.add_option("-c", "--caption", dest="captions",
     action="append",help="Adds caption for each file to plot");
 
@@ -83,9 +80,6 @@ if options.files:
 
 if options.mission:
 
-    if not options.missionlabel:
-        raise Exception("mission must have a label");
-
     #check if file exists
     if not os.path.isfile(str(options.mission)):
         raise Exception("File " + str(options.mission) + "does not exist");
@@ -103,7 +97,7 @@ if options.mission:
         wp_type.append(waypoint.type);
 
 
-    ax.plot(X, Y, Z, label=options.missionlabel, color="red");
+    ax.plot(X, Y, Z, label="Mission", color="red");
     
     #Add "start and end" captions to graph
     ax.text(X[0], Y[0], Z[0], "Start", color='green')
