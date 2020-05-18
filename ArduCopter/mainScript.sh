@@ -202,10 +202,10 @@ runTests(){
 		createRepetitionFolders $i
 
 		#start simulation
-		if [ ! "$CONSOLE" = true ]; then
-			xterm -hold -e "$HOME/ardupilot/Tools/autotest/sim_vehicle.py -j4 -l $lat,$lng,0,0 -S $EMULATION_SPEED > logs/faultLog_$currentMission.log 2>&1" &
-		else
-			xterm -hold -e "$HOME/ardupilot/Tools/autotest/sim_vehicle.py -j4 -l $lat,$lng,0,0 -S $EMULATION_SPEED" &
+		xterm -hold -e "$HOME/ardupilot/Tools/autotest/sim_vehicle.py -j4 -l $lat,$lng,0,0 -S $EMULATION_SPEED > logs/faultLog_$currentMission.log 2>&1" &
+
+		if [ ! "$CONSOLE" = false ]; then
+			xterm -hold -e "tail -f logs/faultLog_$currentMission.log" &
 		fi
 
 		#Wait for SITL to boot up
@@ -265,6 +265,11 @@ createMissionFolder(){
 	cp $missionFilename "$missionLogFolder/$missionName""_mission.txt"
 }
 
+generateOverviewFile(){
+	results_overview="$mainLogPath/Results_Overview.html"
+	./Utils/GenerateOverviewPage.py "$resultFile" > "$results_overview"
+}
+
 main(){
 	checkArguments "$@"
 	askForInput
@@ -299,6 +304,8 @@ main(){
 			#go to next mission
 			currentMission=$((currentMission+1))
 		done
+
+		generateOverviewFile
 
 	} < "$HOME/ardupilot/ArduCopter/Faults/faults.csv"
 }
