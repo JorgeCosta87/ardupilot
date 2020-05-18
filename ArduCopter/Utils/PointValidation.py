@@ -30,6 +30,7 @@ class State(IntEnum):
     NORMAL      = 0
     MINOR_FAULT = 1
     MAJOR_FAULT = 2
+    CRASH       = 3
 
 
 def get_point_status(point, wp_x, wp_y, wp_z, wp_type):
