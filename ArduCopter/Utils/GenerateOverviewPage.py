@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
 # chart imports
-import numpy as np
-import matplotlib.pyplot as plt
 import json # used to convert dictornaries to json
 
 # OS tools
@@ -204,7 +202,6 @@ def get_existing_mission_data(missions, name):
     return False, temp
 
 def organize_data_by_mission(data):
-    categories = [ 'Normal', 'Minor Fault', 'Major Fault', 'Crash' ]
     missions = []
 
     for block in data:
@@ -236,7 +233,7 @@ def organize_data_by_mission(data):
             "Crash"       : mission.crash
         }
 
-    return results, categories
+    return results
 
 
 # Get data by sensor type
@@ -255,7 +252,6 @@ def get_existing_sensor_data(sensors, sensorType):
     return False, temp
 
 def organize_data_by_sensor(data):
-    categories = [ 'Normal', 'Minor Fault', 'Major Fault', 'Crash' ]
     sensors = []
 
     for block in data:
@@ -287,31 +283,29 @@ def organize_data_by_sensor(data):
             "Crash"       : sensor.crash
         }
 
-    return results, categories
+    return results
 
-#Add overall graph displaying amount of fault injection missions and it's failures as well as the non fault injection missions results.
-#Study a way to read the drone's wind speed
-def print_charts(filename):
+def prepare_JSON_data(results):
+    dataArray = []
+    for key in results.keys():
+        dataArray.append(results[key])
+    
+    return json.dumps({ "dataProvider": dataArray })[1:-1] # Removes { } from the begining and end
+
+def GenerateChartPage(filename):
     # read data from results file
     dataset = read_results(filename)
     
     # Get parent directory of results file, so that the charts can be stored next to it
     path = os.path.abspath(os.path.join(filename,os.path.pardir))
 
-    results, categories = organize_data_by_mission(dataset)
-
-    dataArray = []
-    for key in results.keys():
-        dataArray.append(results[key])
+    mission_results = organize_data_by_mission(dataset)
+    sensor_results  = organize_data_by_sensor(dataset)
     
-    chart_data_provider = json.dumps({ "dataProvider": dataArray })[1:-1] # Removes { } from the begining and end
     #print chart_data_provider
     chart = ChartHandler()
-
-    chart.AddChart("Mission Overview", chart_data_provider)
+    chart.AddChart("Mission Overview", prepare_JSON_data(mission_results))
+    chart.AddChart("Sensor Overview", prepare_JSON_data(sensor_results))
     print chart.GetPage()
 
-    
-    plt.show()
-
-print_charts(sys.argv[1])
+GenerateChartPage(sys.argv[1])
