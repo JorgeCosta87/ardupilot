@@ -120,14 +120,14 @@ handleLogs(){
 CrashCheck() {
 
 	{
-		IFS=";"
+		IFS=","
 		read
 		read -ra pos
 		crash=${pos[3]};
 	} < "$runFolder/simulations_report.csv"
 
 	if [ "$crash" == "N" ]; then
-		crashCount=$(grep "$runFolder/console.log" | wc -l)
+		crashCount=$(grep -i "crash" "$runFolder/console.log" | wc -l)
 
 		if (($crashCount > 0)); then
 			crash="Y"
@@ -144,7 +144,7 @@ writeResults(){
 
 	#if log file doesn't exist, write header and create file.
 	if [ ! -f "$resultFile" ]; then
-		printf "MISSION_NAME,INJECTION_ACTIVE,SENSOR,MISSION_RESULT\n" > "$resultFile"
+		printf "ID,REPETITION,MISSION_NAME,INJECTION_ACTIVE,SENSOR,MISSION_RESULT\n" > "$resultFile"
 	fi
 
 	if [ "${array[1]}" == 1 ]; then
