@@ -112,10 +112,7 @@ handleLogs(){
 		sed -e 1b -e '$!d' "$runFolder/faultUnfiltered.log" > "$runFolder/fault.log"
 	fi
 
-	if [ "$CONSOLE" == false ]; then
-		mv "logs/faultLog_$currentMission.log" "$runFolder/console.log";
-	fi
-
+	mv "logs/faultLog_$currentMission.log" "$runFolder/console.log";
 	mv "logs/simulations_report.csv" "$runFolder/";
 	rm "logs/"*.TXT;
 }
