@@ -202,6 +202,7 @@ runTests(){
 		xterm -hold -e "$HOME/ardupilot/Tools/autotest/sim_vehicle.py -j4 -l $lat,$lng,0,0 -S $EMULATION_SPEED > logs/faultLog_$currentMission.log 2>&1" &
 
 		if [ ! "$CONSOLE" = false ]; then
+			sleep 3
 			xterm -hold -e "tail -f logs/faultLog_$currentMission.log" &
 		fi
 
