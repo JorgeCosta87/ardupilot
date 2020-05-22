@@ -144,7 +144,8 @@ writeResults(){
 
 	#if log file doesn't exist, write header and create file.
 	if [ ! -f "$resultFile" ]; then
-		printf "ID,REPETITION,MISSION_NAME,INJECTION_ACTIVE,SENSOR,MISSION_RESULT\n" > "$resultFile"
+		printf "ID,REPETITION,INJECTION,MISSION_NAME,RADIUS,SENSOR,METHOD,DEALY_START" > "$resultFile" 
+		printf ",DURATION,WP_TRIGGER,X,Y,Z,MIN,MAX,NOISE_D,NOISE_M,MISSION_RESULT\n" >> "$resultFile"
 	fi
 
 	if [ "${array[1]}" == 1 ]; then
@@ -188,7 +189,9 @@ writeResults(){
 		result=$(python Utils/EvaluateMission.py "$missionFilename" "$runFolder/gps.log")
 	fi
 
-	printf "$currentMission,$i,${array[2]},$injection,$sensor,$result\n" >> "$resultFile"
+	printf "$currentMission,$i,$injection,${array[2]},${array[3]},$sensor,${array[5]}," >> "$resultFile"
+	printf "${array[6]},${array[7]},${array[8]},${array[9]},${array[10]},${array[11]}," >> "$resultFile"
+	printf "${array[12]},${array[13]},${array[14]},${array[15]},$result\n" >> "$resultFile"
 }
 
 runTests(){
@@ -265,7 +268,17 @@ createMissionFolder(){
 
 generateOverviewFile(){
 	results_overview="$mainLogPath/Results_Overview.html"
-	./Utils/GenerateOverviewPage.py "$resultFile" > "$results_overview"
+	results_cleaned="$mainLogPath/Results_Cleaned.csv"
+
+	# check if there are missions that failed to start
+	failed=$(grep ",$" "$resultFile" | wc -l)
+
+	if (($failed > 0)); then
+		grep -v ",$" "$resultFile" >> "$Results_cleaned"
+		./Utils/GenerateOverviewPage.py "$Results_cleaned" > "$results_overview"
+	else
+		./Utils/GenerateOverviewPage.py "$resultFile" > "$results_overview"
+	fi
 }
 
 main(){
