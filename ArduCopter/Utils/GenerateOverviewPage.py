@@ -157,6 +157,37 @@ class Sensor(IntEnum):
     UNKNOWN         = 5
     NONE            = 6
 
+class Method(IntEnum):
+    STATIC      = 0
+    RANDOM      = 1
+    NOISE       = 2
+    REPEAT_LAST = 3
+    DOUBLE_LAST = 4
+    HALF_LAST   = 5
+    MAX_VALUE   = 6
+    DOUBLE_MAX  = 7
+    MIN_VALUE   = 8
+
+class Filter(IntEnum):
+    ID          = 0
+    REPETITION  = 1
+    INJECTION   = 2
+    MISSION     = 3
+    RADIUS      = 4
+    SENSOR      = 5
+    METHOD      = 6
+    DELAY       = 7
+    DURATION    = 8
+    TRIGGER     = 9
+    X           = 10
+    Y           = 11
+    Z           = 12
+    MIN         = 13
+    MAX         = 14
+    NOISE_D     = 15
+    NOISE_M     = 16
+    RESULT      = 17
+
 
 # Convert result file to data
 def read_results(filename):
@@ -172,78 +203,42 @@ def read_results(filename):
         split = line.split(",")
         
         #structure to store each entry
-        data = namedtuple("run", "id repetition mission_name injection_enabled sensor result")
+        #data = namedtuple("run", "id repetition injection mission_name radius sensor method delay duration wp_trigger x y z min max noise_d noise_m result")
+        
+        data = {}
 
-        data.id                 = int(split[0])
-        data.repetition         = int(split[1])
-        data.mission_name       = split[2]
-        data.injection_enabled  = split[3].lower == "true"
-        data.sensor             = Sensor[split[4]]
-        data.result             = State[split[5].rstrip('\n')]
+        data[Filter.ID]         = int(split[Filter.ID])
+        data[Filter.REPETITION] = int(split[Filter.REPETITION])
+        data[Filter.INJECTION]  = split[Filter.INJECTION].lower == "true"
+        data[Filter.MISSION]    = split[Filter.MISSION]
+        data[Filter.RADIUS]     = split[Filter.RADIUS]
+        data[Filter.SENSOR]     = Sensor[split[Filter.SENSOR]].name
+        data[Filter.METHOD]     = Method(int(split[Filter.METHOD])).name
+        data[Filter.DELAY]      = int(split[Filter.DELAY])
+        data[Filter.DURATION]   = int(split[Filter.DURATION])
+        data[Filter.TRIGGER]    = int(split[Filter.TRIGGER])
+        data[Filter.X]          = float(split[Filter.X])
+        data[Filter.Y]          = float(split[Filter.Y])
+        data[Filter.Z]          = float(split[Filter.Z])
+        data[Filter.MIN]        = int(split[Filter.MIN])
+        data[Filter.MAX]        = int(split[Filter.MAX])
+        data[Filter.NOISE_D]    = float(split[Filter.NOISE_D])
+        data[Filter.NOISE_M]    = float(split[Filter.NOISE_M])
+        data[Filter.RESULT]     = State[split[Filter.RESULT].rstrip('\n')]
 
         results.append(data)
-
-    return results   
-
-
-# Get data by mission file
-def get_existing_mission_data(missions, name):
-    for mission in missions:
-        if mission.name == name:
-            return True, mission
-    
-    temp = namedtuple("mission", "name normal minor major crash")
-    temp.name   = name
-    temp.normal = 0
-    temp.minor  = 0
-    temp.major  = 0
-    temp.crash  = 0
-
-    return False, temp
-
-def organize_data_by_mission(data):
-    missions = []
-
-    for block in data:
-        exists, mission = get_existing_mission_data(missions, block.mission_name)
-
-        if block.result == State.NORMAL:
-            mission.normal += 1
-
-        elif block.result == State.MINOR_FAULT:
-            mission.minor += 1
-
-        elif block.result == State.MAJOR_FAULT:
-            mission.major += 1
-
-        else:
-            mission.crash += 1
-    
-        if not exists:
-            missions.append(mission)
-
-    # Creates dictionary with data to plot
-    results = {}
-    for mission in missions:    
-        results[mission.name] = {   
-            "Mission"    : mission.name,
-            "Normal"      : mission.normal,
-            "Minor Fault" : mission.minor,
-            "Major Fault" : mission.major,
-            "Crash"       : mission.crash
-        }
 
     return results
 
 
 # Get data by sensor type
-def get_existing_sensor_data(sensors, sensorType):
-    for sensor in sensors:
-        if sensor.type == sensorType:
-            return True, sensor
+def get_existing(array, val):
+    for value in array:
+        if value.header == val:
+            return True, value
     
-    temp = namedtuple("sensor", "type normal minor major crash")
-    temp.type   = sensorType
+    temp = namedtuple("value", "header normal minor major crash")
+    temp.header = val
     temp.normal = 0
     temp.minor  = 0
     temp.major  = 0
@@ -251,39 +246,6 @@ def get_existing_sensor_data(sensors, sensorType):
 
     return False, temp
 
-def organize_data_by_sensor(data):
-    sensors = []
-
-    for block in data:
-        exists, sensor = get_existing_sensor_data(sensors, block.sensor)
-
-        if block.result == State.NORMAL:
-            sensor.normal += 1
-
-        elif block.result == State.MINOR_FAULT:
-            sensor.minor += 1
-
-        elif block.result == State.MAJOR_FAULT:
-            sensor.major += 1
-
-        else:
-            sensor.crash += 1
-    
-        if not exists:
-            sensors.append(sensor)
-
-    # Creates dictionary with data to plot
-    results = {}
-    for sensor in sensors:
-        results[sensor.type.name] = {   
-            "Mission"    : sensor.type.name,
-            "Normal"      : sensor.normal,
-            "Minor Fault" : sensor.minor,
-            "Major Fault" : sensor.major,
-            "Crash"       : sensor.crash
-        }
-
-    return results
 
 def prepare_JSON_data(results):
     dataArray = []
@@ -292,20 +254,66 @@ def prepare_JSON_data(results):
     
     return json.dumps({ "dataProvider": dataArray })[1:-1] # Removes { } from the begining and end
 
+
+def organize_data(field,data):
+    values = []
+
+    for block in data:
+        exists, value = get_existing(values, block[field])
+        result = block[Filter.RESULT]
+
+        if result == State.NORMAL:
+            value.normal += 1
+
+        elif result == State.MINOR_FAULT:
+            value.minor += 1
+
+        elif result == State.MAJOR_FAULT:
+            value.major += 1
+
+        else:
+            value.crash += 1
+
+        if not exists:
+            values.append(value)
+
+    # Creates dictionary with data to plot
+    results = {}
+    for stat in values:
+        results[stat.header] = {   
+            "Mission"     : stat.header,
+            "Normal"      : stat.normal,
+            "Minor Fault" : stat.minor,
+            "Major Fault" : stat.major,
+            "Crash"       : stat.crash
+        }
+    
+    return prepare_JSON_data(results)
+
+
 def GenerateChartPage(filename):
     # read data from results file
     dataset = read_results(filename)
-    
+
     # Get parent directory of results file, so that the charts can be stored next to it
     path = os.path.abspath(os.path.join(filename,os.path.pardir))
 
-    mission_results = organize_data_by_mission(dataset)
-    sensor_results  = organize_data_by_sensor(dataset)
+    # Filter Data
+    mission_results = organize_data(Filter.MISSION, dataset)
+    sensor_results  = organize_data(Filter.SENSOR, dataset)
+    method_results  = organize_data(Filter.METHOD, dataset)
+    delay_results   = organize_data(Filter.DELAY, dataset)
+    duration_results = organize_data(Filter.DURATION, dataset)
     
-    #print chart_data_provider
+
+    # Generate HTML
     chart = ChartHandler()
-    chart.AddChart("Mission Overview", prepare_JSON_data(mission_results))
-    chart.AddChart("Sensor Overview", prepare_JSON_data(sensor_results))
+    chart.AddChart("Missions Overview", mission_results)
+    chart.AddChart("Sensors Overview", sensor_results)
+    chart.AddChart("Methods Overview", method_results)
+    chart.AddChart("Delays Overview", delay_results)
+    chart.AddChart("Duration Overview", duration_results)
+    
     print chart.GetPage()
 
 GenerateChartPage(sys.argv[1])
