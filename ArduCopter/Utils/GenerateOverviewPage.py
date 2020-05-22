@@ -304,6 +304,8 @@ def GenerateChartPage(filename):
     method_results  = organize_data(Filter.METHOD, dataset)
     delay_results   = organize_data(Filter.DELAY, dataset)
     duration_results = organize_data(Filter.DURATION, dataset)
+    noiseD_results = organize_data(Filter.NOISE_D, dataset)
+    noiseM_results = organize_data(Filter.NOISE_M, dataset)
     
 
     # Generate HTML
@@ -312,7 +314,9 @@ def GenerateChartPage(filename):
     chart.AddChart("Sensors Overview", sensor_results)
     chart.AddChart("Methods Overview", method_results)
     chart.AddChart("Delays Overview", delay_results)
-    chart.AddChart("Duration Overview", duration_results)
+    chart.AddChart("Durations Overview", duration_results)
+    chart.AddChart("Noise Deviation Overview", noiseD_results)
+    chart.AddChart("Noise Mean Overview", noiseM_results)
     
     print chart.GetPage()
 
