@@ -25,7 +25,7 @@ def getNoiseArrayCombination(arrayMean, arrayDeviation):
 
 missions    = [ "straightLine.txt" ]
 methods     = [ Method.NOISE ]
-sensors     = [ Sensor.ACCELEROMETER, Sensor.COMPASS, Sensor.GYROSCOPE ]
+sensors     = [ Sensor.ACCELEROMETER , Sensor.COMPASS , Sensor.GYROSCOPE ]
 delays      = [ 0 ]
 durations   = [ 50, 100, 500, 1200000 ]
 noises      = getNoiseArrayCombination([ 0.5, 1.0, 5.0, 10.0 ], [ 1.0, 2.0, 5.0 ])
@@ -50,7 +50,7 @@ for mission in missions:
                                     for radius in radiuses:
                                         print("%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s" % (
                                                                     idcounter, injc_on, mission, radius,
-                                                                    sensor, method, delay, duration, 
+                                                                    sensor.value, method.value, delay, duration, 
                                                                     trigger, xyz[0],xyz[1],xyz[2],
                                                                     valmin, valmax, noise[_DEVIATION], noise[_MEAN])
                                         )

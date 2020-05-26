@@ -204,7 +204,7 @@ runTests(){
 		#start simulation
 		xterm -hold -e "$HOME/ardupilot/Tools/autotest/sim_vehicle.py -j4 -l $lat,$lng,0,0 -S $EMULATION_SPEED > logs/faultLog_$currentMission.log 2>&1" &
 
-		if [ ! "$CONSOLE" = false ]; then
+		if [ "$CONSOLE" == true ]; then
 			sleep 3
 			xterm -hold -e "tail -f logs/faultLog_$currentMission.log" &
 		fi
@@ -268,6 +268,7 @@ createMissionFolder(){
 
 generateOverviewFile(){
 	results_overview="$mainLogPath/Results_Overview.html"
+	local resultFile="$mainLogPath/Results.csv"
 	results_cleaned="$mainLogPath/Results_Cleaned.csv"
 
 	# check if there are missions that failed to start
