@@ -10,6 +10,7 @@ import sys
 # Enum
 from enum import IntEnum
 from PointValidation import State
+from Enumerators import Sensor, Method
 
 # Data collections
 from collections import namedtuple
@@ -147,26 +148,7 @@ class ChartHandler:
         page += self._bodyBottom
 
         return page
-
-class Sensor(IntEnum):
-    COMPASS         = 0
-    GYROSCOPE       = 1
-    ACCELEROMETER   = 2
-    BAROMETER       = 3
-    TEMPERATURE     = 4
-    UNKNOWN         = 5
-    NONE            = 6
-
-class Method(IntEnum):
-    STATIC      = 0
-    RANDOM      = 1
-    NOISE       = 2
-    REPEAT_LAST = 3
-    DOUBLE_LAST = 4
-    HALF_LAST   = 5
-    MAX_VALUE   = 6
-    DOUBLE_MAX  = 7
-    MIN_VALUE   = 8
+        
 
 class Filter(IntEnum):
     ID          = 0
