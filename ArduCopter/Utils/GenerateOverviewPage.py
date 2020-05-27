@@ -202,8 +202,8 @@ def read_results(filename):
         data[Filter.X]          = float(split[Filter.X])
         data[Filter.Y]          = float(split[Filter.Y])
         data[Filter.Z]          = float(split[Filter.Z])
-        data[Filter.MIN]        = int(split[Filter.MIN])
-        data[Filter.MAX]        = int(split[Filter.MAX])
+        data[Filter.MIN]        = float(split[Filter.MIN])
+        data[Filter.MAX]        = float(split[Filter.MAX])
         data[Filter.NOISE_D]    = float(split[Filter.NOISE_D])
         data[Filter.NOISE_M]    = float(split[Filter.NOISE_M])
         data[Filter.RESULT]     = State[split[Filter.RESULT].rstrip('\n')]

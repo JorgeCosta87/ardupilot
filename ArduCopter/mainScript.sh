@@ -268,15 +268,14 @@ createMissionFolder(){
 
 generateOverviewFile(){
 	results_overview="$mainLogPath/Results_Overview.html"
-	local resultFile="$mainLogPath/Results.csv"
 	results_cleaned="$mainLogPath/Results_Cleaned.csv"
 
 	# check if there are missions that failed to start
 	failed=$(grep ",$" "$resultFile" | wc -l)
 
 	if (($failed > 0)); then
-		grep -v ",$" "$resultFile" >> "$Results_cleaned"
-		./Utils/GenerateOverviewPage.py "$Results_cleaned" > "$results_overview"
+		grep -v ",$" "$resultFile" >> "$results_cleaned"
+		./Utils/GenerateOverviewPage.py "$results_cleaned" > "$results_overview"
 	else
 		./Utils/GenerateOverviewPage.py "$resultFile" > "$results_overview"
 	fi

@@ -24,11 +24,11 @@ def getNoiseArrayCombination(arrayMean, arrayDeviation):
     return array
 
 missions    = [ "straightLine.txt" ]
-methods     = [ Method.NOISE ]
-sensors     = [ Sensor.ACCELEROMETER , Sensor.COMPASS , Sensor.GYROSCOPE ]
+methods     = [ Method.REPEAT_LAST, Method.MAX_VALUE ]
+sensors     = [ Sensor.ACCELEROMETER, Sensor.COMPASS, Sensor.GYROSCOPE, Sensor.BAROMETER, Sensor.TEMPERATURE ]
 delays      = [ 0 ]
 durations   = [ 50, 100, 500, 1200000 ]
-noises      = getNoiseArrayCombination([ 0.5, 1.0, 5.0, 10.0 ], [ 1.0, 2.0, 5.0 ])
+noises      = getNoiseArrayCombination([ 0.0 ], [ 0.0 ])
 minvals     = [ 0 ]
 maxvals     = [ 0 ]
 xyz_vals    = [ [0.0,0.0,0.0] ]
@@ -41,6 +41,23 @@ print "ID;ENABLED;MISSION;RADIUS;SENSOR;METHOD;DEALY_START;DURATION;WP_TRIGGER;X
 for mission in missions:
     for sensor in sensors: 
         for method in methods:
+
+            if method == Method.MAX_VALUE:
+                if sensor == Sensor.COMPASS:
+                    maxvals = [ 4900 ]
+
+                elif sensor == Sensor.GYROSCOPE:
+                    maxvals = [ 34.9066 ]
+
+                elif sensor == Sensor.TEMPERATURE:
+                    maxvals = [ 85 ]
+                
+                elif sensor == Sensor.BAROMETER:
+                    maxvals = [ 120000 ]
+
+                else: #acceleromenter
+                    maxvals = [ 156.9611 ]
+            
             for delay in delays:
                 for duration in durations:
                     for noise in noises:
