@@ -184,9 +184,6 @@ def read_results(filename):
     for line in file:
         split = line.split(",")
         
-        #structure to store each entry
-        #data = namedtuple("run", "id repetition injection mission_name radius sensor method delay duration wp_trigger x y z min max noise_d noise_m result")
-        
         data = {}
 
         data[Filter.ID]         = int(split[Filter.ID])
@@ -202,8 +199,8 @@ def read_results(filename):
         data[Filter.X]          = float(split[Filter.X])
         data[Filter.Y]          = float(split[Filter.Y])
         data[Filter.Z]          = float(split[Filter.Z])
-        data[Filter.MIN]        = float(split[Filter.MIN])
-        data[Filter.MAX]        = float(split[Filter.MAX])
+        data[Filter.MIN]        = int(split[Filter.MIN])
+        data[Filter.MAX]        = int(split[Filter.MAX])
         data[Filter.NOISE_D]    = float(split[Filter.NOISE_D])
         data[Filter.NOISE_M]    = float(split[Filter.NOISE_M])
         data[Filter.RESULT]     = State[split[Filter.RESULT].rstrip('\n')]

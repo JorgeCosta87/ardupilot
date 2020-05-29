@@ -136,6 +136,11 @@ CrashCheck() {
 }
 
 writeResults(){
+	
+	if [ ! -f "$runFolder/gps.log" ]; then
+		return
+	fi
+
 	resultFile="$mainLogPath/Results.csv"
 	
 	local sensor
