@@ -4,11 +4,6 @@ sys.path.append('../Utils')
 
 from Enumerators import Sensor, Method
 
-# Constants for code clarity
-_DEVIATION  = 0
-_MEAN       = 1
-
-
 
 # Returns an array of arrays with the noise parameters for the Mean and Deviation
 # example: gerNoiseArrayCombination([ 0.5, 1.0, 5.0, 10.0 ], [ 0.5, 1.0, 5.0, 10.0 ])
@@ -19,19 +14,93 @@ def getNoiseArrayCombination(arrayMean, arrayDeviation):
     
     for mean in arrayMean:
         for deviation in arrayDeviation:
-            array.append([ deviation, mean ])
+            array.append([ deviation * 1.0, mean * 1.0 ])
 
     return array
 
+def getParameterValues(method, sensor):
+    minvals = None
+    maxvals = None
+    noises  = None
+
+    if method == Method.MAX_VALUE or method == Method.DOUBLE_MAX:
+        if sensor == Sensor.COMPASS:
+            maxvals = [ 4900 ]
+
+        elif sensor == Sensor.GYROSCOPE:
+            maxvals = [ 34 ]
+
+        elif sensor == Sensor.TEMPERATURE:
+            maxvals = [ 85 ]
+        
+        elif sensor == Sensor.BAROMETER:
+            maxvals = [ 120000 ]
+
+        else: #acceleromenter
+            maxvals = [ 156 ]
+
+    else:
+        maxvals = [ 0 ]
+
+    if method == Method.MIN_VALUE:
+        if sensor == Sensor.COMPASS:
+            minvals = [ -4900 ]
+
+        elif sensor == Sensor.GYROSCOPE:
+            minvals = [ -90 ]
+
+        elif sensor == Sensor.TEMPERATURE:
+            minvals = [ -40 ]
+        
+        elif sensor == Sensor.BAROMETER:
+            minvals = [ -120000 ]
+
+        else: #acceleromenter
+            minvals = [ 0 ]
+
+    else:
+        minvals = [ 0 ]
+
+    if method == Method.NOISE:
+        if sensor == Sensor.COMPASS:
+            noises = getNoiseArrayCombination([ 50.0, 500.0, 1500.0 ], [ 10.0 ])
+
+        elif sensor == Sensor.GYROSCOPE:
+            noises = getNoiseArrayCombination([ 5.0, 20.0, 40.0 ], [ 10.0 ])
+
+        elif sensor == Sensor.TEMPERATURE:
+            noises = getNoiseArrayCombination([ 5.0, 10.0, 20.0 ], [ 5.0 ])
+        
+        elif sensor == Sensor.BAROMETER:
+            noises = getNoiseArrayCombination([ 1000.0, 10000.0, 30000.0 ], [ 1000.0 ])
+
+        else: #acceleromenter
+            noises = getNoiseArrayCombination([ 5.0, 10.0, 50.0 ], [ 5.0 ])
+    
+    else:
+        noises = getNoiseArrayCombination([ 0.0 ], [ 0.0 ])
+
+
+    if method == Method.STATIC:
+        xyz_vals = [ [0.0,0.0,0.0] ]
+        
+    else:
+        xyz_vals    = [ [0.0,0.0,0.0] ]
+
+
+    return minvals, maxvals, noises, xyz_vals
+
+
+# Constants for code clarity
+_DEVIATION  = 0
+_MEAN       = 1
+
+# Parameters
 missions    = [ "straightLine.txt" ]
-methods     = [ Method.REPEAT_LAST, Method.MAX_VALUE ]
+methods     = [ Method.DOUBLE_MAX, Method.DOUBLE_LAST, Method.MAX_VALUE, Method.STATIC, Method.HALF_LAST, Method.REPEAT_LAST ]
 sensors     = [ Sensor.ACCELEROMETER, Sensor.COMPASS, Sensor.GYROSCOPE, Sensor.BAROMETER, Sensor.TEMPERATURE ]
 delays      = [ 0 ]
-durations   = [ 50, 100, 500, 1200000 ]
-noises      = getNoiseArrayCombination([ 0.0 ], [ 0.0 ])
-minvals     = [ 0 ]
-maxvals     = [ 0 ]
-xyz_vals    = [ [0.0,0.0,0.0] ]
+durations   = [ 50, 500, 5000, 320000 ]
 radiuses    = [ 5 ]
 injc_on     = 1
 trigger     = 1
@@ -41,23 +110,7 @@ print "ID;ENABLED;MISSION;RADIUS;SENSOR;METHOD;DEALY_START;DURATION;WP_TRIGGER;X
 for mission in missions:
     for sensor in sensors: 
         for method in methods:
-
-            if method == Method.MAX_VALUE:
-                if sensor == Sensor.COMPASS:
-                    maxvals = [ 4900 ]
-
-                elif sensor == Sensor.GYROSCOPE:
-                    maxvals = [ 34.9066 ]
-
-                elif sensor == Sensor.TEMPERATURE:
-                    maxvals = [ 85 ]
-                
-                elif sensor == Sensor.BAROMETER:
-                    maxvals = [ 120000 ]
-
-                else: #acceleromenter
-                    maxvals = [ 156.9611 ]
-            
+            minvals, maxvals, noises, xyz_vals = getParameterValues(method, sensor)
             for delay in delays:
                 for duration in durations:
                     for noise in noises:
@@ -72,5 +125,3 @@ for mission in missions:
                                                                     valmin, valmax, noise[_DEVIATION], noise[_MEAN])
                                         )
                                         idcounter += 1
-
-                    
