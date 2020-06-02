@@ -37,11 +37,11 @@ def get_point_status(point, wp_x, wp_y, wp_z, wp_type):
     #Exactly one meeter in GPS notation: https://gis.stackexchange.com/questions/8650/measuring-accuracy-of-latitude-and-longitude
     GPS_NORMAL_RADIUS = (0.000001 * 10) - (0.0000001 * 10) #Exactly 1 meter
 
-    #The minor fault boundary limit is equal to 150% of the normal gps boudary
+    #The minor fault boundary limit is equal to 200% of the normal gps boudary
     GPS_HIGH_RADIUS = GPS_NORMAL_RADIUS * 2 #Exactly 2 meters
 
     #Since the Altitude is measured in meters, we use M_RADIUS as the meter radius. It contains the largest radius. 
-    M_RADIUS = 1.5 #Meter
+    M_RADIUS = 2 #Meter
 
     for i, j in zip(range(0,len(wp_x),2), range(len(wp_x)/2)):
         point1 = np.array([ wp_x[i], wp_y[i], 0 ])
