@@ -68,7 +68,7 @@ fileExists(){
 }
 
 getTimestap(){
-	timestamp=$(date +"%d%m%Y_%H%M%S")
+	timestamp=$(date +"%Y%m%d_%H%M%S")
 }
 
 getMissionCoordinatesFromMissionFile() {
