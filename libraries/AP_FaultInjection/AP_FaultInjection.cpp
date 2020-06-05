@@ -163,6 +163,9 @@ void AP_FaultInjection::manipulate_values(Vector3f *rawField, uint8_t sens){
         return;
     }
 
+    //hal.console->printf("X:%f, Y:%f, Z:%f\n",rawField->x, rawField->y, rawField->z);
+    //return;
+
     switch(method)
     {
         case INJECT_STATIC_VALUES : {
@@ -220,9 +223,9 @@ void AP_FaultInjection::manipulate_values(Vector3f *rawField, uint8_t sens){
             break;
         }
         case INJECT_MIN_VALUE : {
-            rawField->x = min_value * 2.0;
-            rawField->y = min_value * 2.0;
-            rawField->z = min_value * 2.0;
+            rawField->x = min_value;
+            rawField->y = min_value;
+            rawField->z = min_value;
             break;
         }
     }
@@ -242,6 +245,9 @@ void AP_FaultInjection::manipulate_single_Value(float *value, uint8_t sens){
             stop_fault_injection();
             return;
         }
+
+        //hal.console->printf("X:%f \n", *value);
+        //return;
     
         if(isRunningFaultInjection)
         {
