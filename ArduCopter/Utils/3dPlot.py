@@ -21,6 +21,7 @@ import MissionTimeUtils as timeutils
 from optparse import OptionParser
 import sys
 import os.path
+import glob
 
 parser = OptionParser("")
 parser.add_option("-f", "--file", dest="files",
@@ -45,6 +46,8 @@ parser.add_option("-t", "--time", action="store_true",dest="time",
 parser.add_option("-e", "--eval", action="store_true",dest="eval",
     help="show evaluation of a specific mission");
 
+parser.add_option("--directory",dest="directory",
+    help="Display mission of a given directory.");
 
 (options, args) = parser.parse_args();
 
@@ -56,6 +59,21 @@ mpl.rcParams['legend.fontsize'] = 10
 fig = plt.figure()
 ax = fig.gca(projection='3d')
 
+
+if options.directory:
+    if os.path.isfile(options.directory+"/gps.log"):
+        options.files = []
+        options.captions = []
+        options.files.append(options.directory+"/gps.log")
+        options.captions.append("Run")
+    
+    mission = glob.glob(options.directory+'/*mission.txt')
+    if len(mission) > 0:
+        options.mission = mission[0]
+
+    if os.path.isfile(options.directory+"/fault.log"):
+        options.faultInjection = []
+        options.faultInjection.append(options.directory+"/fault.log")
 
 if not options.mission and not options.files:
     raise Exception("need data to proccess, no data, no fun! try -h");
@@ -106,6 +124,24 @@ if options.mission:
     #store landing data to calculate distance
     missionlanding = (Y[-1],X[-1]);
 
+if options.faultInjection:
+    first = True;
+
+    for i in range(len(options.faultInjection)):
+        #check if file exists
+        if not os.path.isfile(str(options.files[i])):
+            raise Exception("File " + options.files[i] + "does not exist");
+
+        if not os.path.isfile(options.faultInjection[i]):
+            raise Exception("File " + options.faultInjection[i] + "does not exist");
+
+        data = utils.getFaultyPoints(options.faultInjection[i],options.files[i]);
+        for element in data:
+            if not first:
+                ax.plot(element.x, element.y, element.z , color='#4b0082', linewidth=4, ls='-' ,dash_capstyle='round');
+            else:
+                ax.plot(element.x, element.y, element.z , label= "Fault Occurence" ,color='#4b0082', linewidth=4, ls='-' ,dash_capstyle='round');
+                fist = False;
 
 if options.eval and options.mission and options.files:
     STATUS = State.NORMAL
@@ -133,26 +169,6 @@ if options.eval and options.mission and options.files:
 
     if(len(error_x) > 0):
         ax.plot(error_x,error_y,error_z, 'o', color='red', label='Point of error')
-
-
-if options.faultInjection:
-    first = True;
-
-    for i in range(len(options.faultInjection)):
-        #check if file exists
-        if not os.path.isfile(str(options.files[i])):
-            raise Exception("File " + options.files[i] + "does not exist");
-
-        if not os.path.isfile(options.faultInjection[i]):
-            raise Exception("File " + options.faultInjection[i] + "does not exist");
-
-        data = utils.getFaultyPoints(options.faultInjection[i],options.files[i]);
-        for element in data:
-            if not first:
-                ax.plot(element.x, element.y, element.z , color='#4b0082', linewidth=4, ls='-' ,dash_capstyle='round');
-            else:
-                ax.plot(element.x, element.y, element.z , label= "Fault Occurence" ,color='#4b0082', linewidth=4, ls='-' ,dash_capstyle='round');
-                fist = False;
 
 if options.distance:
     if not options.mission or not options.files:
