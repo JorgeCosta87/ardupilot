@@ -188,7 +188,7 @@ getSensorLogEntries(){
                     ;;
 
                 "MAG" | "MAG2")
-                    data=$(echo "$stamp,${array[8]},${array[11]},${array[15]}");
+                    data=$(echo "$stamp,${array[8]},${array[11]},${array[14]}");
                     writeToFile
                     ;;
 
