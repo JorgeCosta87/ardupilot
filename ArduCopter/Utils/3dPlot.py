@@ -175,7 +175,7 @@ if options.distance:
         raise Exception("Cannot calculate distance between landing zones, since both Mission file and at least one mission is required!");
     
     for i in range(len(options.captions)):
-        print "Distance between \"%s-LZ\" to \"%s-LZ\" is: %.3fm" % (options.captions[i],options.missionlabel,round(distance(runLandZones[i],missionlanding).meters,3))
+        print "Distance between \"%s-LZ\" to \"%s-LZ\" is: %.3fm" % (options.captions[i],"Mission",round(distance(runLandZones[i],missionlanding).meters,3))
 
 
 if options.time and options.mission:
