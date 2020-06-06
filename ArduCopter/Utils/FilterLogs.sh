@@ -2,14 +2,15 @@
 
 usage(){
     printf "\n\033[1;40mUsage:\033[0;40m\n";
-    printf "\033[40m$0 <mandatory: -f filename.log> <optional: -s filetosave.log> \033[1;95;40m<optional:sensors -abcgp>\033[0;40m\n\n";
+    printf "\033[40m$0 <mandatory: -f filename.log> <optional: -s filetosave.log> \033[1;95;40m<optional:sensors -abcgjmp>\033[0;40m\n\n";
     printf "\033[40mSavefile: if the savefile -s argument is not specified the output is written directly into the console.\033[0m\n\n"
     printf "\033[1;40mSensors:\033[21m A sensor must be specified or the output will be null\n"
-    printf "\033[1;95;40m -g Gyroscope\n"
+    printf "\033[1;95;40m -g  Gyroscope\n"
     printf " -a  Accelerometer\n"
     printf " -b  Barometer\n"
     printf " -c  Compass\n"
     printf " -j  Fault Injection\n"
+    printf " -m  MAVLink Messages\n"
     printf " -p  GPS\033[0;40m\n\n";
     printf "\033[1;40mExamples:\033[0m\n\033[1;32;40m$0 -f file.log -s savefile.txt -abcgp\033[0;40m\n";
 	printf "\033[1;32;40m$0 -f file.log -g -a\033[0m\n\n";
@@ -31,7 +32,7 @@ parseArguments(){
 
     masks=();
     maskName=();
-    while getopts ":h f: s: abcgpj" opt; do
+    while getopts ":h f: s: abcgpjm" opt; do
         case $opt in
             f) #adding more files to parse
                 #check if file exists
@@ -129,6 +130,17 @@ parseArguments(){
                 local injection=true;
                 ;;
             
+            m) #MAVLink Messages
+                if [ ! -z $mavlink ]; then
+                    continue;
+                fi
+
+                masks+=(": MSG {");
+                maskName+=("MAVLINK");
+
+                local mavlink=true;
+                ;;
+            
             h) #help message
                 usage
                 exit 1;
@@ -150,11 +162,10 @@ parseArguments(){
         printf "\033[1;31mThe filename is mandatory, try -h \033[0m\n"
         exit 1;
     fi
-
 }
 
 getSensorLogEntries(){
-    IFS=','; #This is here so that the GREP on line 180 works properly
+    IFS=','; #This is here so that the GREP on line 228 works properly
     for i in "${!masks[@]}"; do
         
         #Get Sensor Entries 
@@ -194,6 +205,17 @@ getSensorLogEntries(){
 
                 "INJT")
                     data=$(echo "$stamp,${array[8]},${array[11]},${array[14]}");
+                    writeToFile
+                    ;;
+
+                "MSG")
+                    data="$stamp,"
+                    local size=${#array[@]}
+
+                    for (( x=8; x<$size; x++ )); do
+                        data="$data${array[$x]} "
+                    done
+
                     writeToFile
                     ;;
 
