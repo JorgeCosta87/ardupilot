@@ -145,6 +145,7 @@ writeResults(){
 	
 	local sensor
 	local injection
+	local method
 	local result
 
 	#if log file doesn't exist, write header and create file.
@@ -181,9 +182,52 @@ writeResults(){
 				sensor="UNKNOWN"
 				;;
 		esac
+
+		case ${array[5]} in
+			0)
+				method="STATIC"
+				;;
+
+			1)
+				method="RANDOM"
+				;;
+			
+			2)
+				method="NOISE"
+				;;
+			
+			3)
+				method="REPEAT_LAST"
+				;;
+			
+			4)
+				method="DOUBLE_LAST"
+				;;
+			
+			5)
+				method="HALF_LAST"
+				;;
+
+			6)
+				method="MAX_VALUE"
+				;;
+
+			7)
+				method="DOUBLE_MAX"
+				;;
+
+			8)
+				method="MIN_VALUE"
+				;;
+
+			?)
+				method="UNKNOWN"
+				;;
+		esac
 	else
 		injection="FALSE"
 		sensor="NONE"
+		method="NONE"
 	fi
 
 	#Check if drone crashed
@@ -194,7 +238,8 @@ writeResults(){
 		result=$(python Utils/EvaluateMission.py "$missionFilename" "$runFolder/gps.log")
 	fi
 
-	printf "$currentMission,$i,$injection,${array[2]},${array[3]},$sensor,${array[5]}," >> "$resultFile"
+	array[15]=$(echo "${array[15]//[$'\t\r\n ']}")
+	printf "$currentMission,$i,$injection,${array[2]},${array[3]},$sensor,$method," >> "$resultFile"
 	printf "${array[6]},${array[7]},${array[8]},${array[9]},${array[10]},${array[11]}," >> "$resultFile"
 	printf "${array[12]},${array[13]},${array[14]},${array[15]},$result\n" >> "$resultFile"
 }
@@ -238,6 +283,11 @@ runTests(){
 #This creates the top level folder that will hold all the experiments of the execution
 createExperimentsFolder(){
 	getTimestap
+
+	#check if the logs folder exists, if it doesn't, create it.
+	if [ ! -d "logs" ]; then
+		mkdir "logs"
+	fi
 
 	if (($nFault > 1)); then
 		mainLogPath="logs/Experiments_$timestamp"
