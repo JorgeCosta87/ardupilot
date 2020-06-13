@@ -2,9 +2,11 @@
 set -e
 set -x
 
+sudo apt-get update
+
 OPT="/opt"
 BASE_PKGS="build-essential ccache g++ gawk git make wget"
-PYTHON_PKGS="future lxml mavproxy pymavlink"
+PYTHON_PKGS="future geopy enum34 lxml mavproxy pymavlink dronekit dronekit-sitl"
 PX4_PKGS="python-argparse openocd flex bison libncurses5-dev \
           autoconf texinfo libftdi-dev zlib1g-dev \
           zip genromfs python-empy cmake cmake-data"
