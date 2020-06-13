@@ -4,7 +4,7 @@ set -x
 
 OPT="/opt"
 BASE_PKGS="build-essential ccache g++ gawk git make wget"
-PYTHON_PKGS="future lxml pymavlink MAVProxy"
+PYTHON_PKGS="future lxml mavproxy pymavlink"
 PX4_PKGS="python-argparse openocd flex bison libncurses5-dev \
           autoconf texinfo libftdi-dev zlib1g-dev \
           zip genromfs python-empy cmake cmake-data"
@@ -38,7 +38,7 @@ fi
 # (see https://launchpad.net/gcc-arm-embedded/)
 ARM_ROOT="gcc-arm-none-eabi-4_9-2015q3"
 ARM_TARBALL="$ARM_ROOT-20150921-linux.tar.bz2"
-ARM_TARBALL_URL="http://firmware.ardupilot.org/Tools/PX4-tools/$ARM_TARBALL"
+ARM_TARBALL_URL="http://firmware.ardupilot.org/Tools/PX4-tools/archived/$ARM_TARBALL"
 
 # Ardupilot Tools
 ARDUPILOT_TOOLS="Tools/autotest"
@@ -87,7 +87,7 @@ sudo usermod -a -G dialout $USER
 $APT_GET remove modemmanager
 $APT_GET update
 $APT_GET install $BASE_PKGS $SITL_PKGS $PX4_PKGS $ARM_LINUX_PKGS
-sudo pip2 -q install -U $PYTHON_PKGS
+sudo pip -q install -U $PYTHON_PKGS
 
 if [ ! -d $OPT/$ARM_ROOT ]; then
     (
@@ -128,3 +128,5 @@ apt-cache search arm-none-eabi
  git submodule init
  git submodule update
 )
+
+sudo reboot
