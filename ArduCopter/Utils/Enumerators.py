@@ -20,3 +20,4 @@ class Method(IntEnum):
     MAX_VALUE   = 6
     DOUBLE_MAX  = 7
     MIN_VALUE   = 8
+    NONE        = 9
