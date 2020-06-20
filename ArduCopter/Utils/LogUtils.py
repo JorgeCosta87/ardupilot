@@ -29,6 +29,7 @@ class WPaction(IntEnum):
     VERTICAL_UP     = 0
     VERTICAL_DOWN   = 1
     HORIZONTAL      = 2
+    ROTATE          = 3
     
 
 def GetMissionWaypoints(filename):
@@ -45,6 +46,7 @@ def GetMissionWaypoints(filename):
     waypoint = 16;
     landing = 21;
     takeoff = 22;
+    rotate  = 115;
 
     #Reads first line and set's up variables
     line = file.readline();
@@ -113,6 +115,9 @@ def GetMissionWaypoints(filename):
                 data.z1 = -(initialHeight - float(split[10]))
                 data.type = WPaction.VERTICAL_DOWN
 
+        else:
+            continue
+        
         #points to last waypoint so that it's possible to calculate the next one
         last = data;
         coords.append(data);
