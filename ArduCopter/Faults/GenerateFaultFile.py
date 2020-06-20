@@ -63,19 +63,19 @@ def getParameterValues(method, sensor):
 
     if method == Method.NOISE:
         if sensor == Sensor.COMPASS:
-            noises = getNoiseArrayCombination([ 50.0, 500.0, 1500.0 ], [ 10.0 ])
+            noises = getNoiseArrayCombination([ 50.0, 500.0, 1500.0 ], [ 1500.0 ])
 
         elif sensor == Sensor.GYROSCOPE:
-            noises = getNoiseArrayCombination([ 5.0, 20.0, 40.0 ], [ 10.0 ])
+            noises = getNoiseArrayCombination([ 5.0, 20.0, 40.0 ], [ 20.0 ])
 
         elif sensor == Sensor.TEMPERATURE:
             noises = getNoiseArrayCombination([ 5.0, 10.0, 20.0 ], [ 5.0 ])
         
         elif sensor == Sensor.BAROMETER:
-            noises = getNoiseArrayCombination([ 1000.0, 10000.0, 30000.0 ], [ 1000.0 ])
+            noises = getNoiseArrayCombination([ 1000.0, 10000.0, 30000.0 ], [ 5000.0 ])
 
         else: #acceleromenter
-            noises = getNoiseArrayCombination([ 5.0, 10.0, 50.0 ], [ 5.0 ])
+            noises = getNoiseArrayCombination([ 5.0, 10.0, 50.0 ], [ 15.0 ])
     
     else:
         noises = getNoiseArrayCombination([ 0.0 ], [ 0.0 ])
@@ -96,14 +96,14 @@ _DEVIATION  = 0
 _MEAN       = 1
 
 # Parameters
-missions    = [ "straightLine.txt" ]
-methods     = [ Method.DOUBLE_MAX, Method.DOUBLE_LAST, Method.MAX_VALUE, Method.STATIC, Method.HALF_LAST, Method.REPEAT_LAST ]
+missions    = [ "complex_mission.txt" ]
+methods     = [ Method.NOISE ]
 sensors     = [ Sensor.ACCELEROMETER, Sensor.COMPASS, Sensor.GYROSCOPE, Sensor.BAROMETER, Sensor.TEMPERATURE ]
 delays      = [ 0 ]
 durations   = [ 50, 500, 5000, 320000 ]
 radiuses    = [ 5 ]
 injc_on     = 1
-trigger     = 1
+trigger     = 0
 idcounter   = 1
 
 print "ID;ENABLED;MISSION;RADIUS;SENSOR;METHOD;DEALY_START;DURATION;WP_TRIGGER;X;Y;Z;MIN;MAX;NOISE_D;NOISE_M"
