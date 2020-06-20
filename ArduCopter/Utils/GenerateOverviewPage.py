@@ -192,7 +192,7 @@ def read_results(filename):
         data[Filter.MISSION]    = split[Filter.MISSION]
         data[Filter.RADIUS]     = split[Filter.RADIUS]
         data[Filter.SENSOR]     = Sensor[split[Filter.SENSOR]].name
-        data[Filter.METHOD]     = Method(int(split[Filter.METHOD])).name
+        data[Filter.METHOD]     = Method[split[Filter.METHOD]].name
         data[Filter.DELAY]      = int(split[Filter.DELAY])
         data[Filter.DURATION]   = int(split[Filter.DURATION])
         data[Filter.TRIGGER]    = int(split[Filter.TRIGGER])
