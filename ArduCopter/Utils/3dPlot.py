@@ -23,6 +23,32 @@ import sys
 import os.path
 import glob
 
+def move_view(event):
+            ax.autoscale(enable=False, axis='both')  # I have no idea, it this line have some effect at all
+            ## Set nearly similar speed of motion in dependency on zoom
+            koef = 10.  ## speed for 3D should be lower
+            zkoef = (ax.get_zbound()[0] - ax.get_zbound()[1]) / koef
+
+            xkoef = (ax.get_xbound()[0] - ax.get_xbound()[1]) / koef
+            ykoef = (ax.get_ybound()[0] - ax.get_ybound()[1]) / koef
+
+            ## Map an motion to keyboard shortcuts
+            if event.key == "ctrl+down":
+                ax.set_ybound(ax.get_ybound()[0] + xkoef, ax.get_ybound()[1] + xkoef)
+            if event.key == "ctrl+up":
+                ax.set_ybound(ax.get_ybound()[0] - xkoef, ax.get_ybound()[1] - xkoef)
+            if event.key == "ctrl+right":
+                ax.set_xbound(ax.get_xbound()[0] + ykoef, ax.get_xbound()[1] + ykoef)
+            if event.key == "ctrl+left":
+                ax.set_xbound(ax.get_xbound()[0] - ykoef, ax.get_xbound()[1] - ykoef)
+            if event.key == "down":
+                ax.set_zbound(ax.get_zbound()[0] - zkoef, ax.get_zbound()[1] - zkoef)
+            if event.key == "up":
+                ax.set_zbound(ax.get_zbound()[0] + zkoef, ax.get_zbound()[1] + zkoef)
+
+            ax.figure.canvas.draw()
+            # print event.key
+
 parser = OptionParser("")
 parser.add_option("-f", "--file", dest="files",
     action="append", help="read GPS data from log files and plot on the graph");
@@ -187,6 +213,8 @@ if options.time and options.mission:
 ax.set_xlabel('Latitude')
 ax.set_ylabel('Longitude')
 ax.set_zlabel('Altitude')
+
+fig.canvas.mpl_connect("key_press_event", move_view)
 
 ax.legend()
 plt.show()
