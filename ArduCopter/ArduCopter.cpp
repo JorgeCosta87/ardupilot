@@ -648,14 +648,15 @@ void Copter::runtime_injection()
         g2.inj_noise_mean,
         g2.inj_noise_std,
         g2.inj_min_value,
-        g2.inj_max_value);
+        g2.inj_max_value,
+        &copter);
     }
 
    // cliSerial = hal.console;
    // cliSerial->printf("Barometer\n");
-   if(AP_FaultInjection::isRunningFaultInjection){
-       copter.Log_Write_Fault_InjectionDetails(g2.inj_static_valueX,g2.inj_static_valueY,g2.inj_static_valueZ);
-   }
+   //if(AP_FaultInjection::isRunningFaultInjection){
+   //    copter.Log_Write_Fault_InjectionDetails(g2.inj_static_valueX,g2.inj_static_valueY,g2.inj_static_valueZ);
+   //}
 
     AP_FaultInjection::update();
 }

@@ -49,7 +49,10 @@ class AP_FaultInjection
             AP_Int32 inj_duration, AP_Float static_valueX,
             AP_Float static_valueY, AP_Float static_valueZ,
             AP_Float inj_noise_mean, AP_Float inj_noise_std,
-            AP_Float inj_min_value, AP_Float inj_max_value);
+            AP_Float inj_min_value, AP_Float inj_max_value,
+            Copter * copter);
+
+        static void loadLoggingFunction(void (Copter::*log_data)(float, float, float));
 
         static void incrementWaypoit();
         static void resetWaypoitCount();
@@ -88,4 +91,5 @@ class AP_FaultInjection
         static float    noise_std;
         static float    max_value;
         static float    min_value;
+        static Copter * copter; 
 };

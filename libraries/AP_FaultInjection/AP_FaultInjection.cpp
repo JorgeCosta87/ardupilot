@@ -27,7 +27,7 @@ float AP_FaultInjection::max_value;
 
 bool AP_FaultInjection::readLastValue = false;
 Vector3f AP_FaultInjection::last_value;
-
+Copter * AP_FaultInjection::copter = NULL;
 
 AP_FaultInjection::AP_FaultInjection(void)
 {
@@ -64,7 +64,8 @@ void AP_FaultInjection::loadValues(
     AP_Int32 inj_duration, AP_Float static_valueX,
     AP_Float static_valueY, AP_Float static_valueZ,
     AP_Float inj_noise_mean, AP_Float inj_noise_std,
-    AP_Float inj_min_value, AP_Float inj_max_value)
+    AP_Float inj_min_value, AP_Float inj_max_value,
+    Copter * obj_copter)
 {
 
     //load values
@@ -82,7 +83,7 @@ void AP_FaultInjection::loadValues(
     noise_std = inj_noise_std;
     min_value = inj_min_value;
     max_value = inj_max_value;
-
+    copter = obj_copter;
 /*
     hal.console->printf("update:"
     "\n\t enabled: %d"
@@ -113,7 +114,6 @@ void AP_FaultInjection::update()
             if(AP_HAL::millis() > time_to_stop && duration != INFINITE)
             {
                 stop_fault_injection();
-                //log_fault_injection("end_fault_injection");
             }
         }
         else{
@@ -121,7 +121,6 @@ void AP_FaultInjection::update()
             {
                 wp_fault_triggered = current_WP;
                 start_fault_injection();
-                // log_fault_injection("start_fault_injection");
             }
         }
     }
@@ -164,7 +163,8 @@ void AP_FaultInjection::manipulate_values(Vector3f *rawField, uint8_t sens){
     }
 
     //hal.console->printf("X:%f, Y:%f, Z:%f\n",rawField->x, rawField->y, rawField->z);
-    //return;
+    copter->Log_Write_Fault_InjectionDetails(rawField->x, rawField->y, rawField->z);
+    return;
 
     switch(method)
     {
@@ -251,6 +251,9 @@ void AP_FaultInjection::manipulate_single_Value(float *value, uint8_t sens){
     
         if(isRunningFaultInjection)
         {
+            copter->Log_Write_Fault_InjectionDetails(*value, *value, *value);
+            return;
+
             switch(method)
             {
                 case INJECT_STATIC_VALUES : {
