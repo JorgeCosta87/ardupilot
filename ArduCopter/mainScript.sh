@@ -101,12 +101,20 @@ handleLogs(){
 
 	mv "logs/"*.BIN $rawLog;
 
+	# Convert log to txt format
 	./Utils/ExtractLog.sh -f "$rawLog" -s "$unfilteredLog";
-	./Utils/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/gps.log" -p;
 
+	# Obtains sensor specific logs
+	./Utils/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/gps.log" -p;
+	./Utils/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/accelerometer.log" -a;
+	./Utils/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/barometer.log" -b;
+	./Utils/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/compass.log" -c;
+	./Utils/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/gyroscope.log" -g;
+	
 	#if fault injection is active then extract the fault injection logs
 	if ((${array[1]} == 1)); then
-		./Utils/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/faultUnfiltered.log" -j;
+		#./Utils/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/faultUnfiltered.log" -j;
+		grep ": INJT {" "$unfilteredLog" | ./Utils/FilterLogs > "$runFolder/faultUnfiltered.log"
 
 		#remove unnecessary entrances from fault.log
 		sed -e 1b -e '$!d' "$runFolder/faultUnfiltered.log" > "$runFolder/fault.log"
@@ -235,7 +243,7 @@ writeResults(){
 	if [ "$crash" == "Y" ]; then
 		result="CRASH"
 	else
-		result=$(python Utils/EvaluateMission.py "$missionFilename" "$runFolder/gps.log")
+		result=$(python Utils/EvaluateMission.py "$currentMissionFileName" "$runFolder/gps.log")
 	fi
 
 	array[15]=$(echo "${array[15]//[$'\t\r\n ']}")
@@ -317,8 +325,9 @@ createMissionFolder(){
 		missionLogFolder="$mainLogPath"
 	fi
 
+	currentMissionFileName="$missionLogFolder/$missionName""_mission.txt"
 	#copy mission file to current missionLogFolder
-	cp $missionFilename "$missionLogFolder/$missionName""_mission.txt"
+	cp $missionFilename "$currentMissionFileName"
 }
 
 generateOverviewFile(){
