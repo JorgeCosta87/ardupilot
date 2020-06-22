@@ -234,76 +234,77 @@ void AP_FaultInjection::manipulate_values(Vector3f *rawField, uint8_t sens){
 void AP_FaultInjection::manipulate_single_Value(float *value, uint8_t sens){
     
         if(!isEnableFaultInjection){
-           return;
+            return;
+        }
+
+        if(!isRunningFaultInjection){
+            return;
         }
     
         if(sens != sensors){
             return;
         }
 
-        if(AP_HAL::millis() >= time_to_stop){
+        /*if(AP_HAL::millis() >= time_to_stop){
             stop_fault_injection();
             return;
-        }
+        }*/
 
         //hal.console->printf("X:%f \n", *value);
         //return;
-    
-        if(isRunningFaultInjection)
+
+        copter->Log_Write_Fault_InjectionDetails(*value, *value, *value);
+        return;
+
+        switch(method)
         {
-            copter->Log_Write_Fault_InjectionDetails(*value, *value, *value);
-            return;
+            case INJECT_STATIC_VALUES : {
+                *value = static_rawField.x;
+                break;
+            }
 
-            switch(method)
-            {
-                case INJECT_STATIC_VALUES : {
-                    *value = static_rawField.x;
-                    break;
-                }
+            case INJECT_RANDOM_VALUES : {
+                *value = random_float(min_value, max_value);
+                break;
+            }
 
-                case INJECT_RANDOM_VALUES : {
-                    *value = random_float(min_value, max_value);
-                    break;
-                }
+            case INJECT_NOISE : {
+                //gaussian_noise(rawField, noise_mean, noise_std);
+                break;
+            }
 
-                case INJECT_NOISE : {
-                    //gaussian_noise(rawField, noise_mean, noise_std);
-                    break;
-                }
+            case INJECT_REPEAT_LAST_KNOWN_VALUE : {
+                if(!readLastValue){
+                    last_value.x = *value;
 
-                case INJECT_REPEAT_LAST_KNOWN_VALUE : {
-                    if(!readLastValue){
-                        last_value.x = *value;
+                    readLastValue = true;
+                }
+                *value = last_value.x; 
+                break;
+            }
 
-                        readLastValue = true;
-                    }
-                    *value = last_value.x; 
-                    break;
-                }
+            case INJECT_DOUBLE : {
+                *value = *value * 2.0f;
+                break;
+            }
 
-                case INJECT_DOUBLE : {
-                    *value = *value * 2.0f;
-                    break;
-                }
+            case INJECT_HALF : {
+                *value = *value / 2.0f;
+                break;
+            }
 
-                case INJECT_HALF : {
-                    *value = *value / 2.0f;
-                    break;
-                }
-
-                case INJECT_MAX_VALUE : {
-                    *value = max_value;
-                    break;
-                }
-                
-                case INJECT_DOUBLE_MAX : {
-                    *value = max_value * 2.0f;
-                    break;
-                }
-                case INJECT_MIN_VALUE : {
-                    *value = min_value * 2.0f;
-                    break;
-                }
+            case INJECT_MAX_VALUE : {
+                *value = max_value;
+                break;
+            }
+            
+            case INJECT_DOUBLE_MAX : {
+                *value = max_value * 2.0f;
+                break;
+            }
+            case INJECT_MIN_VALUE : {
+                *value = min_value * 2.0f;
+                break;
             }
         }
     }
