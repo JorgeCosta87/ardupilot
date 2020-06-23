@@ -155,24 +155,53 @@ void Copter::do_erase_logs(void)
     gcs().send_text(MAV_SEVERITY_INFO, "Log erase complete");
 }
 
-struct PACKED log_FaultInjection {
+struct PACKED log_FaultInjection { //QfffLLeffffhhh
     LOG_PACKET_HEADER;
     uint64_t time_us;
-    float    x_value;
-    float    y_value;
-    float    z_value;
-
+    float inject_x;
+    float inject_y;
+    float inject_z;
+    int32_t lat;
+    int32_t lng;
+    int32_t alt;
+    float gyro_x;
+    float gyro_y;
+    float gyro_z;
+    float accel_z;
+    int16_t mag_x;
+    int16_t mag_y;
+    int16_t mag_z;
 };
 
+
 // Write an Autotune data packet
-void Copter::Log_Write_Fault_InjectionDetails(float x, float y, float z)
+void Copter::Log_Write_Fault_InjectionDetails( float x_inj,    float y_inj,    float z_inj)
 {
+    const struct Location &loc = gps.location();
+    const Vector3f &accel = ins.get_accel();
+    const Vector3f &gyro = ins.get_gyro();
+    const Vector3f &mag_field = compass.get_field();
+
     struct log_FaultInjection pkt = {
         LOG_PACKET_HEADER_INIT(LOG_FAULT_INJECTION),
         time_us     : AP_HAL::micros64(),
-        x_value     : x,
-        y_value     : y,
-        z_value     : z
+        inject_x    : x_inj,
+        inject_y    : y_inj,
+        inject_z    : z_inj,
+
+        lat         : loc.lat,
+        lng         : loc.lng,
+        alt         : loc.alt,
+        
+        gyro_x      : gyro.x,
+        gyro_y      : gyro.y,
+        gyro_z      : gyro.z,
+
+        accel_z     : accel.z,
+
+        mag_x       : (int16_t)mag_field.x,
+        mag_y       : (int16_t)mag_field.y,
+        mag_z       : (int16_t)mag_field.z
     };
     DataFlash.WriteBlock(&pkt, sizeof(log_FaultInjection));
 }
@@ -848,7 +877,7 @@ const struct LogStructure Copter::log_structure[] = {
     { LOG_THROW_MSG, sizeof(log_Throw),
       "THRO",  "QBffffbbbb",  "TimeUS,Stage,Vel,VelZ,Acc,AccEfZ,Throw,AttOk,HgtOk,PosOk" },
     { LOG_FAULT_INJECTION, sizeof(log_FaultInjection),
-      "INJT",  "Qfff",  "TimeUS,val_x,val_y,val_z" },
+      "INJT",  "QfffLLeffffhhh",  "TimeUS,X,Y,Z,pX,pY,pZ,gX,gY,gZ,spd,mX,mY,mZ" },
 };
 
 #if CLI_ENABLED == ENABLED

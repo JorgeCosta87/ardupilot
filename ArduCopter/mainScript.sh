@@ -115,9 +115,9 @@ handleLogs(){
 	if ((${array[1]} == 1)); then
 		#./Utils/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/faultUnfiltered.log" -j;
 		grep ": INJT {" "$unfilteredLog" | ./Utils/FilterLogs > "$runFolder/faultUnfiltered.log"
-
+		
 		#remove unnecessary entrances from fault.log
-		sed -e 1b -e '$!d' "$runFolder/faultUnfiltered.log" > "$runFolder/fault.log"
+		sed -e 2p -e '$!d' "$runFolder/faultUnfiltered.log" > "$runFolder/fault.log"
 	fi
 
 	mv "logs/faultLog_$currentMission.log" "$runFolder/console.log";
