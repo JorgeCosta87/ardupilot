@@ -158,11 +158,11 @@ def getFaultyPoints(timestampFilename, coordinatesFilename):
         try:
             line = stampContents[i];
             tsSplit = line.split(",");
-            injectionTimeStart = datetime.strptime(tsSplit[1], '%Y-%m-%d %H:%M:%S.%f');
+            injectionTimeStart = datetime.strptime(tsSplit[0], '%Y-%m-%d %H:%M:%S.%f');
 
             line = stampContents[i+1];
             tsSplit = line.split(",");
-            injectionTimeEnd = datetime.strptime(tsSplit[1], '%Y-%m-%d %H:%M:%S.%f');
+            injectionTimeEnd = datetime.strptime(tsSplit[0], '%Y-%m-%d %H:%M:%S.%f');
 
         except:
             if ((len(fault.x) % 2) != 0) and len(fault.x) > 0:

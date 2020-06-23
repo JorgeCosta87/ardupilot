@@ -8,7 +8,7 @@ int main(int argc, char ** argv){
     string delimiters(" ,{}:");
     string array[33];
 
-    cout << "#TIMESTAMP;INJ_X;INJ_Y;INJ_Z;POS_X;POS_Y;POS_Z;GYRO_X;GYRO_Y;GYRO_Z;SPEED;MAG_X;MAG_Y;MAG_Z" << endl;
+    cout << "#TIMESTAMP,INJ_X,INJ_Y,INJ_Z,POS_X,POS_Y,POS_Z,GYRO_X,GYRO_Y,GYRO_Z,SPEED,MAG_X,MAG_Y,MAG_Z" << endl;
     while(getline(cin, lineInput)){
         size_t beginning, it = 0 ,pos = 0;
 

@@ -97,9 +97,9 @@ if options.directory:
     if len(mission) > 0:
         options.mission = mission[0]
 
-    if os.path.isfile(options.directory+"/fault.log"):
+    if os.path.isfile(options.directory+"/fault_interval.log"):
         options.faultInjection = []
-        options.faultInjection.append(options.directory+"/fault.log")
+        options.faultInjection.append(options.directory+"/fault_interval.log")
 
 if not options.mission and not options.files:
     raise Exception("need data to proccess, no data, no fun! try -h");

@@ -114,10 +114,10 @@ handleLogs(){
 	#if fault injection is active then extract the fault injection logs
 	if ((${array[1]} == 1)); then
 		#./Utils/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/faultUnfiltered.log" -j;
-		grep ": INJT {" "$unfilteredLog" | ./Utils/FilterLogs > "$runFolder/faultUnfiltered.log"
+		grep ": INJT {" "$unfilteredLog" | ./Utils/FilterLogs > "$runFolder/faults.csv"
 		
 		#remove unnecessary entrances from fault.log
-		sed -e 2p -e '$!d' "$runFolder/faultUnfiltered.log" > "$runFolder/fault.log"
+		sed -e 2p -e '$!d' "$runFolder/faults.csv" > "$runFolder/fault_interval.log"
 	fi
 
 	mv "logs/faultLog_$currentMission.log" "$runFolder/console.log";
