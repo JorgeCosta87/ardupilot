@@ -155,7 +155,7 @@ void Copter::do_erase_logs(void)
     gcs().send_text(MAV_SEVERITY_INFO, "Log erase complete");
 }
 
-struct PACKED log_FaultInjection { //QfffLLeffffhhh
+struct PACKED log_FaultInjection { //QfffLLefffhhh
     LOG_PACKET_HEADER;
     uint64_t time_us;
     float inject_x;
@@ -167,12 +167,21 @@ struct PACKED log_FaultInjection { //QfffLLeffffhhh
     float gyro_x;
     float gyro_y;
     float gyro_z;
-    float accel_z;
     int16_t mag_x;
     int16_t mag_y;
     int16_t mag_z;
 };
 
+struct PACKED log_FaultInjection_extra { //Qfffffc
+    LOG_PACKET_HEADER;
+    uint64_t time_us;
+    float accel_x;
+    float accel_y;
+    float accel_z;
+    float altitude;
+    float pressure;
+    int16_t temperature;
+};
 
 // Write an Autotune data packet
 void Copter::Log_Write_Fault_InjectionDetails( float x_inj,    float y_inj,    float z_inj)
@@ -181,10 +190,11 @@ void Copter::Log_Write_Fault_InjectionDetails( float x_inj,    float y_inj,    f
     const Vector3f &accel = ins.get_accel();
     const Vector3f &gyro = ins.get_gyro();
     const Vector3f &mag_field = compass.get_field();
+    uint64_t time = AP_HAL::micros64();
 
     struct log_FaultInjection pkt = {
         LOG_PACKET_HEADER_INIT(LOG_FAULT_INJECTION),
-        time_us     : AP_HAL::micros64(),
+        time_us     : time,
         inject_x    : x_inj,
         inject_y    : y_inj,
         inject_z    : z_inj,
@@ -197,14 +207,25 @@ void Copter::Log_Write_Fault_InjectionDetails( float x_inj,    float y_inj,    f
         gyro_y      : gyro.y,
         gyro_z      : gyro.z,
 
-        accel_z     : accel.z,
-
         mag_x       : (int16_t)mag_field.x,
         mag_y       : (int16_t)mag_field.y,
         mag_z       : (int16_t)mag_field.z
     };
     DataFlash.WriteBlock(&pkt, sizeof(log_FaultInjection));
+
+    struct log_FaultInjection_extra pkt2 = {
+        LOG_PACKET_HEADER_INIT(LOG_FAULT_INJECTION_EXTRA),
+        time_us         : time,
+        accel_x         : accel.x,
+        accel_y         : accel.y,
+        accel_z         : accel.z,
+        altitude        : barometer.get_altitude(),
+        pressure        : barometer.get_pressure(),
+        temperature     : (int16_t)(barometer.get_temperature() * 100 + 0.5f),
+    };
+    DataFlash.WriteBlock(&pkt2, sizeof(log_FaultInjection_extra));
 }
+
 
 #if AUTOTUNE_ENABLED == ENABLED
 struct PACKED log_AutoTune {
@@ -877,7 +898,9 @@ const struct LogStructure Copter::log_structure[] = {
     { LOG_THROW_MSG, sizeof(log_Throw),
       "THRO",  "QBffffbbbb",  "TimeUS,Stage,Vel,VelZ,Acc,AccEfZ,Throw,AttOk,HgtOk,PosOk" },
     { LOG_FAULT_INJECTION, sizeof(log_FaultInjection),
-      "INJT",  "QfffLLeffffhhh",  "TimeUS,X,Y,Z,pX,pY,pZ,gX,gY,gZ,spd,mX,mY,mZ" },
+      "INJT",  "QfffLLefffhhh",  "TimeUS,X,Y,Z,pX,pY,pZ,gX,gY,gZ,mX,mY,mZ" },
+    { LOG_FAULT_INJECTION_EXTRA, sizeof(log_FaultInjection_extra),
+      "INJT",  "Qfffffc",  "TimeUS,accX,accY,accZ,height,pressure,temperature" },
 };
 
 #if CLI_ENABLED == ENABLED
