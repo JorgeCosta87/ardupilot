@@ -120,6 +120,9 @@ public:
     // Set the primary baro
     void set_primary_baro(uint8_t primary) { _primary_baro.set_and_save(primary); };
 
+    // Get the primary baro
+     uint8_t get_primary_baro() { return _primary; };
+
     // Set the type (Air or Water) of a particular instance
     void set_type(uint8_t instance, baro_type_t type) { sensors[instance].type = type; };
 
