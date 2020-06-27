@@ -172,7 +172,7 @@ struct PACKED log_FaultInjection { //QfffLLefffhhh
     int16_t mag_z;
 };
 
-struct PACKED log_FaultInjection_extra { //Qfffffc
+struct PACKED log_FaultInjection_extra { //QfffffcBBBBB
     LOG_PACKET_HEADER;
     uint64_t time_us;
     float accel_x;
@@ -181,6 +181,11 @@ struct PACKED log_FaultInjection_extra { //Qfffffc
     float altitude;
     float pressure;
     int16_t temperature;
+    uint8_t current_compass;
+    uint8_t current_accel;
+    uint8_t current_gps;
+    uint8_t current_baro;
+    uint8_t current_gyro;
 };
 
 // Write an Autotune data packet
@@ -222,6 +227,11 @@ void Copter::Log_Write_Fault_InjectionDetails( float x_inj,    float y_inj,    f
         altitude        : barometer.get_altitude(),
         pressure        : barometer.get_pressure(),
         temperature     : (int16_t)(barometer.get_temperature() * 100 + 0.5f),
+        current_compass : compass.get_primary(),
+        current_accel   : ins.get_primary_accel(),
+        current_gps     : gps.primary_sensor(),
+        current_baro    : barometer.get_primary_baro(),
+        current_gyro    : ins.get_primary_gyro()
     };
     DataFlash.WriteBlock(&pkt2, sizeof(log_FaultInjection_extra));
 }
@@ -900,7 +910,7 @@ const struct LogStructure Copter::log_structure[] = {
     { LOG_FAULT_INJECTION, sizeof(log_FaultInjection),
       "INJT",  "QfffLLefffhhh",  "TimeUS,X,Y,Z,pX,pY,pZ,gX,gY,gZ,mX,mY,mZ" },
     { LOG_FAULT_INJECTION_EXTRA, sizeof(log_FaultInjection_extra),
-      "INJT",  "Qfffffc",  "TimeUS,accX,accY,accZ,height,pressure,temperature" },
+      "INJT",  "QfffffcBBBBB",  "TimeUS,accX,accY,accZ,alt,press,temp,cC,cA,cGPS,cB,cG" },
 };
 
 #if CLI_ENABLED == ENABLED
