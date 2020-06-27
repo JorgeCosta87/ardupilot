@@ -2,7 +2,6 @@
 #include <string>
 #include <sstream>
 #include <iomanip>
-#include <cmath>
 
 using namespace std;
 
@@ -59,8 +58,8 @@ int main(int argc, char ** argv){
             ss.str(array[16]);
             ss >> y;
 
-            x = abs((x - init_x)*110000);
-            y = abs((y - init_y)*110000);
+            x = (x - init_x)*110000;
+            y = (y - init_y)*110000;
         }
 
         cout << fixed << "," << array[8] << "," << array[10] << "," << array[12] << "," << x << "," << y;
