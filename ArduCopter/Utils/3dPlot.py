@@ -53,7 +53,10 @@ parser = OptionParser("")
 parser.add_option("-f", "--file", dest="files",
     action="append", help="read GPS data from log files and plot on the graph");
 
-parser.add_option("-i", "--FaultInjection", dest="faultInjection",
+parser.add_option("-i", dest="faultInjection",
+    action="store_true", help="Marks GPS intervals during which a fault was injected, this option is used along with the --directory option");
+
+parser.add_option("--injection", dest="faultInjection",
     action="append", help="Marks GPS intervals during which a fault was injected");
 
 parser.add_option("-m", "--mission", dest="mission",
@@ -84,7 +87,10 @@ if len(args) == 1:
 mpl.rcParams['legend.fontsize'] = 10
 fig = plt.figure()
 ax = fig.gca(projection='3d')
+injection = False
 
+if options.faultInjection:
+    injection = True
 
 if options.directory:
     if os.path.isfile(options.directory+"/gps.log"):
@@ -150,7 +156,7 @@ if options.mission:
     #store landing data to calculate distance
     missionlanding = (Y[-1],X[-1]);
 
-if options.faultInjection:
+if options.faultInjection and injection == True:
     first = True;
 
     for i in range(len(options.faultInjection)):
