@@ -106,15 +106,16 @@ handleLogs(){
 
 	# Obtains sensor specific logs
 	./Utils/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/gps.log" -p;
-	./Utils/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/accelerometer.log" -a;
-	./Utils/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/barometer.log" -b;
-	./Utils/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/compass.log" -c;
-	./Utils/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/gyroscope.log" -g;
+	
+	#./Utils/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/accelerometer.log" -a;
+	#./Utils/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/barometer.log" -b;
+	#./Utils/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/compass.log" -c;
+	#./Utils/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/gyroscope.log" -g;
 	
 	#if fault injection is active then extract the fault injection logs
 	if ((${array[1]} == 1)); then
 		#./Utils/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/faultUnfiltered.log" -j;
-		grep ": INJT {" "$unfilteredLog" | ./Utils/FilterLogs > "$runFolder/faults.csv"
+		grep ": INJT {\|: ERR {" "$unfilteredLog" | ./Utils/FilterLogs > "$runFolder/faults.csv"
 		
 		#remove unnecessary entrances from fault.log
 		sed -e 2p -e '$!d' "$runFolder/faults.csv" > "$runFolder/fault_interval.log"

@@ -1,7 +1,6 @@
 ID;ENABLED;MISSION;RADIUS;SENSOR;METHOD;DEALY_START;DURATION;WP_TRIGGER;X;Y;Z;MIN;MAX;NOISE_D;NOISE_M
-1;1;straightLine.txt;5;1;0;0;1000;2;100.0;90.0;10.00;0;0;0.00;0.00
-2;0;straightLine.txt;5;1;0;0;1000;2;100.0;90.0;10.00;0;0;0.00;0.00
-3;0;straightLine_300m.txt;10;1;0;0;1000;2;100.0;90.0;10.00;0;0;0.00;0.00
-4;1;straightLine.txt;5;1;0;0;1000;2;100.0;90.0;10.00;0;0;0.00;0.00
-5;0;horizontal_new.txt;30;0;0;0;1000;2;100.0;90.0;10.00;0;0;0.00;0.00
-6;1;horizontal_new.txt;30;0;0;0;1000;2;100.0;90.0;10.00;0;0;0.00;0.00
+1;1;complex_mission.txt;15;3;0;0;0;0;0.0;0.0;0.0;0;0;0.0;0.0
+2;1;complex_mission.txt;15;4;0;0;0;0;0.0;0.0;0.0;0;0;0.0;0.0
+3;1;complex_mission.txt;15;2;0;0;0;0;0.0;0.0;0.0;0;0;0.0;0.0
+4;1;complex_mission.txt;15;0;0;0;0;0;0.0;0.0;0.0;0;0;0.0;0.0
+5;1;complex_mission.txt;15;1;0;0;0;0;0.0;0.0;0.0;0;0;0.0;0.0

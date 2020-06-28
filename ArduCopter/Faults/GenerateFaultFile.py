@@ -97,11 +97,11 @@ _MEAN       = 1
 
 # Parameters
 missions    = [ "complex_mission.txt" ]
-methods     = [ Method.NOISE ]
-sensors     = [ Sensor.ACCELEROMETER, Sensor.COMPASS, Sensor.GYROSCOPE, Sensor.BAROMETER, Sensor.TEMPERATURE ]
+methods     = [ Method.STATIC ]
+sensors     = [ Sensor.BAROMETER, Sensor.TEMPERATURE, Sensor.ACCELEROMETER, Sensor.COMPASS, Sensor.GYROSCOPE ]
 delays      = [ 0 ]
-durations   = [ 50, 500, 5000, 320000 ]
-radiuses    = [ 5 ]
+durations   = [ 0 ]
+radiuses    = [ 15 ]
 injc_on     = 1
 trigger     = 0
 idcounter   = 1
