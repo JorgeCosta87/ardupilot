@@ -164,7 +164,7 @@ void AP_FaultInjection::manipulate_values(Vector3f *rawField, uint8_t sens){
 
     //hal.console->printf("X:%f, Y:%f, Z:%f\n",rawField->x, rawField->y, rawField->z);
     copter->Log_Write_Fault_InjectionDetails(rawField->x, rawField->y, rawField->z);
-    return;
+    //return;
 
     switch(method)
     {
@@ -228,6 +228,20 @@ void AP_FaultInjection::manipulate_values(Vector3f *rawField, uint8_t sens){
             rawField->z = min_value;
             break;
         }
+
+        case INJECT_SCALE: {
+            rawField->x *= max_value;
+            rawField->y *= max_value;
+            rawField->z *= max_value;
+            break;
+        }
+        
+        case INJECT_OFFSET: {
+            rawField->x += static_rawField.x;
+            rawField->y += static_rawField.y;
+            rawField->z += static_rawField.z;
+            break;
+        }
     }
 }
 
@@ -254,7 +268,7 @@ void AP_FaultInjection::manipulate_single_Value(float *value, uint8_t sens){
         //return;
 
         copter->Log_Write_Fault_InjectionDetails(*value, *value, *value);
-        return;
+        //return;
 
         switch(method)
         {
@@ -269,7 +283,7 @@ void AP_FaultInjection::manipulate_single_Value(float *value, uint8_t sens){
             }
 
             case INJECT_NOISE : {
-                //gaussian_noise(rawField, noise_mean, noise_std);
+                *value += random_float(noise_mean, noise_std);
                 break;
             }
 
@@ -304,6 +318,16 @@ void AP_FaultInjection::manipulate_single_Value(float *value, uint8_t sens){
             }
             case INJECT_MIN_VALUE : {
                 *value = min_value * 2.0f;
+                break;
+            }
+
+            case INJECT_SCALE: {
+                (*value) *= static_rawField.x;
+                break;
+            }
+
+            case INJECT_OFFSET: {
+                (*value) += static_rawField.x;
                 break;
             }
         }

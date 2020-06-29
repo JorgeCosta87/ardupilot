@@ -22,6 +22,8 @@
 #define INJECT_MAX_VALUE                        6
 #define INJECT_DOUBLE_MAX                       7
 #define INJECT_MIN_VALUE                        8
+#define INJECT_OFFSET                           9
+#define INJECT_SCALE                            10
 
 //sensors
 #define SENSOR_COMPASS                          0
@@ -83,8 +85,8 @@ class AP_FaultInjection
         static uint64_t time_to_start;
         static uint64_t time_to_stop;
 
-        static int8_t         sensors;
-        static int8_t         method;
+        static int8_t   sensors;
+        static int8_t   method;
 
         static Vector3f static_rawField;
         static float    noise_mean;
