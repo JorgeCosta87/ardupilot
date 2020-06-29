@@ -229,6 +229,14 @@ writeResults(){
 				method="MIN_VALUE"
 				;;
 
+			9)
+				method="OFFSET"
+				;;
+
+			10)
+				method="SCALE"
+				;;
+
 			?)
 				method="UNKNOWN"
 				;;

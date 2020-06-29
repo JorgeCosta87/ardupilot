@@ -102,6 +102,10 @@ if options.directory:
     mission = glob.glob(options.directory+'/*mission.txt')
     if len(mission) > 0:
         options.mission = mission[0]
+    else:
+        mission = glob.glob(options.directory+'../*mission.txt')
+        if len(mission) > 0:
+            options.mission = mission[0]
 
     if os.path.isfile(options.directory+"/fault_interval.log"):
         options.faultInjection = []
