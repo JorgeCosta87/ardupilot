@@ -40,7 +40,10 @@ def getParameterValues(method, sensor):
             maxvals = [ 156 ]
 
     else:
-        maxvals = [ 0 ]
+        if method == Method.SCALE:
+            maxvals = [ 2, 4, 8, 16, 32 ]
+        else:
+            maxvals = [ 0 ]
 
     if method == Method.MIN_VALUE:
         if sensor == Sensor.COMPASS:
@@ -80,13 +83,29 @@ def getParameterValues(method, sensor):
     else:
         noises = getNoiseArrayCombination([ 0.0 ], [ 0.0 ])
 
+    if method == Method.OFFSET:
 
-    if method == Method.STATIC:
-        xyz_vals = [ [0.0,0.0,0.0] ]
+        if sensor == Sensor.COMPASS:
+            xyz_vals = [ [10.0,1.0,5.0], [20.0,5.0,10.0], [40.0,10.0,20.0], [80.0,20.0,50.0], [100.0,50.0,100.0] ]
+
+        elif sensor == Sensor.GYROSCOPE:
+            xyz_vals = [ [0.1,0.1,0.5], [0.5,0.5,1.0], [1.0,1.0,2.0], [2.0,2.0,5.0], [5.0,5.0,10.0] ]
+
+        elif sensor == Sensor.TEMPERATURE:
+            xyz_vals = [ [5.0,0.0,0.0], [10.0,0.0,0.0], [20.0,0.0,0.0], [30.0,0.0,0.0], [50.0,0.0,0.0] ]
         
-    else:
-        xyz_vals    = [ [0.0,0.0,0.0] ]
+        elif sensor == Sensor.BAROMETER:
+            xyz_vals = [ [0.1,0.0,0.0], [0.5,0.0,0.0], [1.0,0.0,0.0], [2.0,0.0,0.0], [5.0,0.0,0.0] ]
 
+        else: #acceleromenter
+            xyz_vals = [ [0.01,0.01,1.0], [0.1,0.1,2.0], [0.5,0.5,3.0], [0.8,0.8,5.0], [1.5,1.5,10.0]]
+
+    else:
+        if method == Method.STATIC:
+            xyz_vals = [ [0.0,0.0,0.0] ]
+            
+        else:
+            xyz_vals = [ [0.0,0.0,0.0] ]
 
     return minvals, maxvals, noises, xyz_vals
 
@@ -97,8 +116,8 @@ _MEAN       = 1
 
 # Parameters
 missions    = [ "complex_mission.txt" ]
-methods     = [ Method.STATIC ]
-sensors     = [ Sensor.BAROMETER, Sensor.TEMPERATURE, Sensor.ACCELEROMETER, Sensor.COMPASS, Sensor.GYROSCOPE ]
+methods     = [ Method.OFFSET, Method.SCALE ]
+sensors     = [ Sensor.ACCELEROMETER, Sensor.COMPASS, Sensor.GYROSCOPE, Sensor.BAROMETER, Sensor.TEMPERATURE ]
 delays      = [ 0 ]
 durations   = [ 0 ]
 radiuses    = [ 15 ]
