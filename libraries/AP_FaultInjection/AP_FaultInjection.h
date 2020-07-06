@@ -23,7 +23,8 @@
 #define INJECT_DOUBLE_MAX                       7
 #define INJECT_MIN_VALUE                        8
 #define INJECT_OFFSET                           9
-#define INJECT_SCALE                            10
+#define INJECT_SCALE_MULTIPLY                   10
+#define INJECT_SCALE_DIVIDE                     11
 
 //sensors
 #define SENSOR_COMPASS                          0

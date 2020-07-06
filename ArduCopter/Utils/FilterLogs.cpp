@@ -244,7 +244,7 @@ void splitFields(string * array, string &lineInput, const string &delimiters, si
 }
 
 int main(int argc, char ** argv){
-    string array[31];
+    string array[33];
     string lineInput;
     string delimiters(" ,{}:");
     size_t it;
@@ -260,7 +260,9 @@ int main(int argc, char ** argv){
     initEnumIdentifiers();
 
     cout.precision(2);
-    cout << "#TIMESTAMP,ERROR,ERROR_DESC,INJ_X,INJ_Y,INJ_Z,POS_X,POS_Y,POS_Z,GYRO_X,GYRO_Y,GYRO_Z,MAG_X,MAG_Y,MAG_Z,ACC_X,ACC_Y,ACC_Z,BAR_X,BAR_Y,BAR_Z,CUR_COMPASS,CUR_ACCEL,CUR_GPS,CUR_BARO,CUR_GYRO" << endl;
+    cout << "#TIMESTAMP,ERROR,ERROR_DESC,INJ_X,INJ_Y,INJ_Z,POS_X,POS_Y,POS_Z,GYRO_X,GYRO_Y,GYRO_Z,MAG_X,MAG_Y,MAG_Z,SPEED,";
+    cout << "ACC_X,ACC_Y,ACC_Z,BAR_X_ALTITUDE,BAR_Y_PRESSURE,BAR_Z_TEMPERATURE,WAYPOINT,ROLL,PITCH,YAW,IMU" << endl; //CUR_COMPASS,CUR_ACCEL,CUR_GPS,CUR_BARO,CUR_GYRO" << endl;
+    
     while(getline(cin, lineInput)){
 
         splitFields(array, lineInput, delimiters, it);

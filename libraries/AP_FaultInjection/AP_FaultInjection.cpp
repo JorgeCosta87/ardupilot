@@ -229,10 +229,17 @@ void AP_FaultInjection::manipulate_values(Vector3f *rawField, uint8_t sens){
             break;
         }
 
-        case INJECT_SCALE: {
+        case INJECT_SCALE_MULTIPLY: {
             rawField->x *= max_value;
             rawField->y *= max_value;
             rawField->z *= max_value;
+            break;
+        }
+
+        case INJECT_SCALE_DIVIDE: {
+            rawField->x /= max_value;
+            rawField->y /= max_value;
+            rawField->z /= max_value;
             break;
         }
         
@@ -321,8 +328,15 @@ void AP_FaultInjection::manipulate_single_Value(float *value, uint8_t sens){
                 break;
             }
 
-            case INJECT_SCALE: {
-                (*value) *= static_rawField.x;
+            case INJECT_SCALE_MULTIPLY: {
+                (*value) *= max_value;
+                break;
+            }
+
+            case INJECT_SCALE_DIVIDE: {
+                if(max_value != 0)
+                    (*value) /= max_value;
+                
                 break;
             }
 

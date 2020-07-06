@@ -283,8 +283,11 @@ private:
     void update_EKF2(void);
     void update_EKF3(void);
 
+    public:
     // get the index of the current primary IMU
     uint8_t get_primary_IMU_index(void) const;
+    
+    private:
     
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
     SITL::SITL *_sitl;

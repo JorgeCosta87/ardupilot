@@ -105,7 +105,8 @@ handleLogs(){
 	./Utils/ExtractLog.sh -f "$rawLog" -s "$unfilteredLog";
 
 	# Obtains sensor specific logs
-	./Utils/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/gps.log" -p;
+	#./Utils/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/gps.log" -p;
+	grep ": GPS {" "$unfilteredLog" | ./Utils/FilterGPSLogs > "$runFolder/gps.log"
 	
 	#./Utils/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/accelerometer.log" -a;
 	#./Utils/FilterLogs.sh -f "$unfilteredLog" -s "$runFolder/barometer.log" -b;
@@ -234,7 +235,11 @@ writeResults(){
 				;;
 
 			10)
-				method="SCALE"
+				method="SCALE_MULTIPLY"
+				;;
+
+			11)
+				method="SCALE_DIVIDE"
 				;;
 
 			?)

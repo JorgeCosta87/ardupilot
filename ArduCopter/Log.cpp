@@ -155,7 +155,7 @@ void Copter::do_erase_logs(void)
     gcs().send_text(MAV_SEVERITY_INFO, "Log erase complete");
 }
 
-struct PACKED log_FaultInjection { //QfffLLefffhhh
+struct PACKED log_FaultInjection { //QfffLLefffhhhf
     LOG_PACKET_HEADER;
     uint64_t time_us;
     float inject_x;
@@ -170,31 +170,41 @@ struct PACKED log_FaultInjection { //QfffLLefffhhh
     int16_t mag_x;
     int16_t mag_y;
     int16_t mag_z;
+    float speed;
 };
 
-struct PACKED log_FaultInjection_extra { //QfffffcBBBBB
+struct PACKED log_FaultInjection_extra { //QfffffcbccCB
     LOG_PACKET_HEADER;
     uint64_t time_us;
-    float accel_x;
-    float accel_y;
-    float accel_z;
+    float acc_x;
+    float acc_y;
+    float acc_z;
+
     float altitude;
     float pressure;
-    int16_t temperature;
-    uint8_t current_compass;
-    uint8_t current_accel;
-    uint8_t current_gps;
-    uint8_t current_baro;
-    uint8_t current_gyro;
+    int16_t baro_temperature;
+
+    int8_t current_waypoint;
+
+    int16_t roll;
+    int16_t pitch;
+    uint16_t yaw;
+
+    uint8_t imu;
 };
 
 // Write an Autotune data packet
 void Copter::Log_Write_Fault_InjectionDetails( float x_inj,    float y_inj,    float z_inj)
 {
+    Vector3f euler;
     const struct Location &loc = gps.location();
-    const Vector3f &accel = ins.get_accel();
-    const Vector3f &gyro = ins.get_gyro();
+    const uint8_t imu_index = ahrs.get_primary_IMU_index();
+    const Vector3f &accel = ins.get_accel(imu_index);
+    const Vector3f &gyro = ins.get_gyro(imu_index);
     const Vector3f &mag_field = compass.get_field();
+    
+    ahrs.get_secondary_attitude(euler);
+
     uint64_t time = AP_HAL::micros64();
 
     struct log_FaultInjection pkt = {
@@ -214,26 +224,45 @@ void Copter::Log_Write_Fault_InjectionDetails( float x_inj,    float y_inj,    f
 
         mag_x       : (int16_t)mag_field.x,
         mag_y       : (int16_t)mag_field.y,
-        mag_z       : (int16_t)mag_field.z
+        mag_z       : (int16_t)mag_field.z,
+
+        speed       : gps.ground_speed(),
     };
     DataFlash.WriteBlock(&pkt, sizeof(log_FaultInjection));
+
 
     struct log_FaultInjection_extra pkt2 = {
         LOG_PACKET_HEADER_INIT(LOG_FAULT_INJECTION_EXTRA),
         time_us         : time,
-        accel_x         : accel.x,
-        accel_y         : accel.y,
-        accel_z         : accel.z,
+        acc_x           : accel.x,
+        acc_y           : accel.y,
+        acc_z           : accel.z,
+
         altitude        : barometer.get_altitude(),
         pressure        : barometer.get_pressure(),
-        temperature     : (int16_t)(barometer.get_temperature() * 100 + 0.5f),
-        current_compass : compass.get_primary(),
-        current_accel   : ins.get_primary_accel(),
-        current_gps     : gps.primary_sensor(),
-        current_baro    : barometer.get_primary_baro(),
-        current_gyro    : ins.get_primary_gyro()
+        baro_temperature: (int16_t)(barometer.get_temperature() * 100 + 0.5f),
+
+        current_waypoint: AP_FaultInjection::current_WP,
+
+        roll            : (int16_t)(degrees(euler.x)*100),
+        pitch           : (int16_t)(degrees(euler.y)*100),
+        yaw             : (uint16_t)(wrap_360_cd(degrees(euler.z)*100)),
+
+        imu             : imu_index,
     };
     DataFlash.WriteBlock(&pkt2, sizeof(log_FaultInjection_extra));
+
+    /*BBBB
+    uint8_t current_compass;
+    uint8_t current_accel_gyro;
+    uint8_t current_gps;
+    uint8_t current_baro;
+
+    current_compass : compass.get_primary(),
+    current_accel_gyro : imu_index,
+    current_gps     : gps.primary_sensor(),
+    current_baro    : barometer.get_primary_baro(),
+    */
 }
 
 
@@ -908,9 +937,9 @@ const struct LogStructure Copter::log_structure[] = {
     { LOG_THROW_MSG, sizeof(log_Throw),
       "THRO",  "QBffffbbbb",  "TimeUS,Stage,Vel,VelZ,Acc,AccEfZ,Throw,AttOk,HgtOk,PosOk" },
     { LOG_FAULT_INJECTION, sizeof(log_FaultInjection),
-      "INJT",  "QfffLLefffhhh",  "TimeUS,X,Y,Z,pX,pY,pZ,gX,gY,gZ,mX,mY,mZ" },
+      "INJT",  "QfffLLefffhhhf",  "TimeUS,X,Y,Z,pX,pY,pZ,gX,gY,gZ,mX,mY,mZ,speed" },
     { LOG_FAULT_INJECTION_EXTRA, sizeof(log_FaultInjection_extra),
-      "INJT",  "QfffffcBBBBB",  "TimeUS,accX,accY,accZ,alt,press,temp,cC,cA,cGPS,cB,cG" },
+      "INJT",  "QfffffcbccCB",  "TimeUS,acX,acY,acZ,alt,press,temp,wp,roll,pitch,yaw,imu" },
 };
 
 #if CLI_ENABLED == ENABLED
