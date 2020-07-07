@@ -64,17 +64,17 @@ argumentParsing(){
 				local max=$(wc -l "Faults/faults.csv" | cut -d " " -f1)
 				if [ ${OPTARG^^} == "ALL" ]; then
 					nFault=$((max - 1))
-					break
-				fi
-
-				if (( $OPTARG < 1 )); then
-					nFault=1
-				elif (( $OPTARG > max - 1 )); then
-					nFault=$((max - 1))
 				else
-					nFault="$OPTARG"
-				fi
 
+					if (( $OPTARG < 1 )); then
+						nFault=1
+					elif (( $OPTARG > max - 1 )); then
+						nFault=$((max - 1))
+					else
+						nFault="$OPTARG"
+					fi
+				fi
+				
                 ;;
 			
 			r) # Repetition
