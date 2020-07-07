@@ -1,53 +1,127 @@
 #!/bin/bash
 
 usage(){
-	echo "usage: $0 <optional: speed of simulation [0-5]> <option: output to console [1]>"
+	printf "\n\033[1mUsage:\033[0m\n";
+	printf "\033[1m -s \033[0m: Emulation Speed : range [1-5] : default [2]\n";
+	printf "\033[1m -C \033[0m: Display Console Ouput : default [\033[1mOFF\033[0m]\n";
+	printf "\033[1m -l \033[0m: path to store log results\n";
+	printf "\033[1m -n \033[0m: Experiment count : range [1 - max faults file ] : default [ 1 ]\n";
+	printf "\033[1m -r \033[0m: Experiment Repetition : range [ 1 - any ] : default [1]\n";
+	printf "\033[1m -h \033[0m: This help screen.\n";
 }
 
-checkArguments(){
-	if (($# == 0 )); then
-		EMULATION_SPEED=1
-		return;
+argumentParsing(){
+	# Move to ArduCopters root
+	cd "${0%/*}"
+
+	currentMission=1;
+	CONSOLE=false;
+	EMULATION_SPEED=2;
+	nRep=1;
+	nFault=1;
+
+    while getopts ":s:l:Cr:n:h" opt; do
+        case $opt in
+            s) # emulation speed
+
+				re='^[0-9]+([.][0-9]+)?$'
+				if ! [[ $OPTARG =~ $re ]]; then
+					echo "argument must be a number!"
+					usage
+					exit 1;
+				fi
+
+				if (($OPTARG > 5 )) || (( $OPTARG <= 1 )); then
+					usage
+					exit 1;
+				fi
+
+				EMULATION_SPEED=$OPTARG
+                ;;
+			
+			C) # display console output
+				CONSOLE=true;
+                ;;
+
+            l) # move log location
+				if [ ! -d "$OPTARG" ]; then
+					echo "Path: '$OPTARG' does not exist!"
+					exit 1;
+				fi
+
+				logAlt=$(dirname "$OPTARG/.")
+                ;;
+
+			n) # number of tests to run
+
+				re='[0-9]'
+				if  [[ ! $OPTARG =~ $re ]] && [ ${OPTARG^^} != "ALL" ]; then
+					echo "argument must be a number!"
+					exit 1;
+				fi
+
+				# Get max lines
+				local max=$(wc -l "Faults/faults.csv" | cut -d " " -f1)
+				if [ ${OPTARG^^} == "ALL" ]; then
+					nFault=$((max - 1))
+					break
+				fi
+
+				if (( $OPTARG < 1 )); then
+					nFault=1
+				elif (( $OPTARG > max - 1 )); then
+					nFault=$((max - 1))
+				else
+					nFault="$OPTARG"
+				fi
+
+                ;;
+			
+			r) # Repetition
+				re='[0-9]'
+				if ! [[ $OPTARG =~ $re ]]; then
+					echo "argument must be a number!"
+					exit 1;
+				fi
+
+				if (( $OPTARG < 1 )); then
+					nRep=1
+				else
+					nRep=$OPTARG
+				fi
+                ;;
+
+			h)
+				usage
+				exit 0;
+				;;
+
+            \?)
+                echo "Invalid option: -$OPTARG" >&2
+                exit 1;
+                ;;
+            
+            :)
+                echo "Option -$OPTARG requires an argument." >&2
+                exit 1
+                ;;
+        esac
+    done
+	
+	printf "\033[1m\n\n---------------------------------------------\n\n"
+
+	printf "Executing:\n"
+	printf "Test Count: \t\t$nFault\n"
+	printf "Repetition: \t\t$nRep\n"
+	printf "Emulation Speed: \t$EMULATION_SPEED""x\n"
+	printf "Console enabled: \t$CONSOLE\n"
+
+	if [ ! -z $logAlt ]; then
+		printf "Alternative log Location: $logAlt\n"
 	fi
 
-	if (($# == 2)); then
-		CONSOLE=true;
-	else
-		CONSOLE=false;
-	fi
+	printf "\n---------------------------------------------\n\n\033[0m"
 
-	re='^[0-9]+([.][0-9]+)?$'
-	if ! [[ $1 =~ $re ]]; then
-		echo "argument must be a number!"
-		usage
-		exit 1;
-	fi
-
-	if (($1 > 5 )) || (( $1 <= 0 )); then
-		usage
-		exit 1;
-	fi
-
-	EMULATION_SPEED=$1
-}
-
-askForInput(){
-	echo -n "Enter number of faults > "
-	read nFault
-
-	echo -n "Enter number of repetions per fault> "
-	read nRep
-
-	#this is here for commodity of not creating a function just for it
-	currentMission=1
-
-	if (( $nFault < 1 )); then
-		nFault=1
-	fi
-
-	if (( $nRep < 1 )); then
-		nRep=1
-	fi
 }
 
 killProcesses(){
@@ -300,6 +374,24 @@ runTests(){
 		writeResults
 
 	done
+
+	# Moves logs to the alternate folder
+	if [ ! -z $logAlt ]; then
+
+		if (($nFault > 1)); then
+			if [ ! -d "$logAlt/$mainLogPath" ]; then
+				mkdir -p "$logAlt/$mainLogPath"
+			fi
+			mv "$missionLogFolder" "$logAlt/$mainLogPath"
+
+		else
+			if [ ! -d "$logAlt/logs" ]; then
+				mkdir -p "$logAlt/logs"
+			fi
+
+			mv "$missionLogFolder" "$logAlt/logs"
+		fi
+	fi
 }
 
 #This creates the top level folder that will hold all the experiments of the execution
@@ -345,8 +437,19 @@ createMissionFolder(){
 }
 
 generateOverviewFile(){
-	results_overview="$mainLogPath/Results_Overview.html"
-	results_cleaned="$mainLogPath/Results_Cleaned.csv"
+
+	# If we are using an alternative log storage directory from the default, set the variables according to the location
+	local baseExperimentName=$(basename $missionLogFolder)
+	if [ ! -z $logAlt ]; then
+
+		resultFile="$logAlt/$mainLogPath/Results.csv"
+		results_overview="$logAlt/$mainLogPath/Results_Overview.html"
+		results_cleaned="$logAlt/$mainLogPath/Results_Cleaned.csv"
+
+	else
+		results_overview="$mainLogPath/Results_Overview.html"
+		results_cleaned="$mainLogPath/Results_Cleaned.csv"
+	fi
 
 	# check if there are missions that failed to start
 	failed=$(grep ",$" "$resultFile" | wc -l)
@@ -360,8 +463,7 @@ generateOverviewFile(){
 }
 
 main(){
-	checkArguments "$@"
-	askForInput
+	argumentParsing "$@"
 
 	{ #This is required so the redirection know it's targets
 
@@ -393,6 +495,12 @@ main(){
 			#go to next mission
 			currentMission=$((currentMission+1))
 		done
+
+		if [ ! -z $logAlt ] && (($nFault > 1)); then
+			mv $resultFile "$logAlt/$mainLogPath"
+
+			rm -r $mainLogPath
+		fi
 
 		generateOverviewFile
 
