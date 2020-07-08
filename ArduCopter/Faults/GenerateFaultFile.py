@@ -18,6 +18,31 @@ def getNoiseArrayCombination(arrayMean, arrayDeviation):
 
     return array
 
+def getXYZCombo(arrayX, arrayY = [], arrayZ = []):
+    array = []
+
+    count = max([len(arrayX), len(arrayY), len(arrayZ)])
+
+    for index in range(count):
+        if index < len(arrayX):
+            x = arrayX[index] * 1.0
+        else:
+            x = 0.0
+
+        if index < len(arrayY):
+            y = arrayY[index] * 1.0
+        else:
+            y = 0.0
+
+        if index < len(arrayZ):
+            z = arrayZ[index] * 1.0
+        else:
+            z = 0.0
+
+        array.append([x,y,z])
+    
+    return array
+
 def getParameterValues(method, sensor):
     minvals = None
     maxvals = None
@@ -40,8 +65,9 @@ def getParameterValues(method, sensor):
             maxvals = [ 156 ]
 
     else:
-        if method == Method.SCALE:
+        if method == Method.SCALE_MULTIPLY or method == Method.SCALE_DIVIDE:
             maxvals = [ 2, 4, 8, 16, 32 ]
+            
         else:
             maxvals = [ 0 ]
 
@@ -86,19 +112,30 @@ def getParameterValues(method, sensor):
     if method == Method.OFFSET:
 
         if sensor == Sensor.COMPASS:
-            xyz_vals = [ [10.0,1.0,5.0], [20.0,5.0,10.0], [40.0,10.0,20.0], [80.0,20.0,50.0], [100.0,50.0,100.0] ]
+            #xyz_vals = [ [10.0,1.0,5.0], [20.0,5.0,10.0], [40.0,10.0,20.0], [80.0,20.0,50.0], [100.0,50.0,100.0] ]
+            xyz_vals = getXYZCombo([0.1, 1, 10, 100, 1000, -0.1, -1, -10, -100, -1000 ])
+            xyz_vals += getXYZCombo([],[0.01, 0.1, 1, 10, 100, 1000, -0.01, -0.1, -1, -10, -100, -1000])
+            xyz_vals += getXYZCombo([],[],[0.1, 1, 10, 100, 1000, -0.1, -1, -10, -100, -1000 ])
 
         elif sensor == Sensor.GYROSCOPE:
-            xyz_vals = [ [0.1,0.1,0.5], [0.5,0.5,1.0], [1.0,1.0,2.0], [2.0,2.0,5.0], [5.0,5.0,10.0] ]
+            #xyz_vals = [ [0.1,0.1,0.5], [0.5,0.5,1.0], [1.0,1.0,2.0], [2.0,2.0,5.0], [5.0,5.0,10.0] ]
+            xyz_vals = getXYZCombo([0.001, 0.01, 0.1, 1, 10, 100, 1000, -0.001, -0.01,-0.1, -1, -10, -100, -1000 ])
+            xyz_vals += getXYZCombo([],[0.001, 0.01, 0.1, 1, 10, 100, 1000, -0.001, -0.01,-0.1, -1, -10, -100, -1000 ])
+            xyz_vals += getXYZCombo([],[],[0.01, 0.1, 1, 10, 100, 1000, -0.01, -0.1, -1, -10, -100, -1000])
 
         elif sensor == Sensor.TEMPERATURE:
-            xyz_vals = [ [5.0,0.0,0.0], [10.0,0.0,0.0], [20.0,0.0,0.0], [30.0,0.0,0.0], [50.0,0.0,0.0] ]
+            #xyz_vals = [ [5.0,0.0,0.0], [10.0,0.0,0.0], [20.0,0.0,0.0], [30.0,0.0,0.0], [50.0,0.0,0.0] ]
+            xyz_vals = getXYZCombo([ 1, 10, 100, 1000, 10000 ])
         
         elif sensor == Sensor.BAROMETER:
-            xyz_vals = [ [0.1,0.0,0.0], [0.5,0.0,0.0], [1.0,0.0,0.0], [2.0,0.0,0.0], [5.0,0.0,0.0] ]
+            #xyz_vals = [ [0.1,0.0,0.0], [0.5,0.0,0.0], [1.0,0.0,0.0], [2.0,0.0,0.0], [5.0,0.0,0.0] ]
+            xyz_vals = getXYZCombo([ 0.1, 1, 10, 100, 1000, -0.1, -1, -10, -100, -1000 ])
 
         else: #acceleromenter
-            xyz_vals = [ [0.01,0.01,1.0], [0.1,0.1,2.0], [0.5,0.5,3.0], [0.8,0.8,5.0], [1.5,1.5,10.0]]
+            #xyz_vals = [ [0.01,0.01,1.0], [0.1,0.1,2.0], [0.5,0.5,3.0], [0.8,0.8,5.0], [1.5,1.5,10.0]]
+            xyz_vals = getXYZCombo([0.0001, 0.001, 0.01, 0.1, 1, 10, 100, -0.0001, -0.001, -0.01,-0.1, -1, -10, -100 ])
+            xyz_vals += getXYZCombo([],[0.0001, 0.001, 0.01, 0.1, 1, 10, 100, -0.0001, -0.001, -0.01,-0.1, -1, -10, -100 ])
+            xyz_vals += getXYZCombo([],[],[0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000, -0.0001, -0.001, -0.01,-0.1, -1, -10, -100, -1000])
 
     else:
         if method == Method.STATIC:
@@ -116,14 +153,14 @@ _MEAN       = 1
 
 # Parameters
 missions    = [ "complex_mission.txt" ]
-methods     = [ Method.OFFSET, Method.SCALE ]
+methods     = [ Method.OFFSET, Method.SCALE_DIVIDE, Method.SCALE_MULTIPLY ]
 sensors     = [ Sensor.ACCELEROMETER, Sensor.COMPASS, Sensor.GYROSCOPE, Sensor.BAROMETER, Sensor.TEMPERATURE ]
 delays      = [ 0 ]
 durations   = [ 0 ]
 radiuses    = [ 15 ]
 injc_on     = 1
-trigger     = 0
-idcounter   = 1
+trigger     = 1
+idcounter   = 2
 
 print "ID;ENABLED;MISSION;RADIUS;SENSOR;METHOD;DEALY_START;DURATION;WP_TRIGGER;X;Y;Z;MIN;MAX;NOISE_D;NOISE_M"
 for mission in missions:
