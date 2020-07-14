@@ -59,7 +59,7 @@ def GetMissionWaypoints(filename):
     initialHeight = float(split[10]);
     
 
-    last = namedtuple("coord", "x y z x1 y1 z1 type");
+    last = namedtuple("coord", "x y z x1 y1 z1 type delay");
     last.x1 = default.lng;
     last.y1 = default.lat;
     last.z1 = default.alt;
@@ -72,8 +72,9 @@ def GetMissionWaypoints(filename):
         #The drone action
         action = int(split[3]);
 
-        data = namedtuple("coord", "x y z x1 y1 z1 type");
-
+        data = namedtuple("coord", "x y z x1 y1 z1 type delay");
+        data.delay = 0.0
+        
         if(action == waypoint):
 
             #Get Current position
@@ -84,7 +85,10 @@ def GetMissionWaypoints(filename):
             #Get next way point 
             data.x1 = float(split[9]);
             data.y1 = float(split[8]);
-            data.z1 = float(default.alt + float(split[10]));# TODO: this can screw up some stuff when there are more than 1 waypoint, needs testing
+            data.z1 = float(default.alt + float(split[10]));
+
+            #Get delay
+            data.delay = float(split[4]);
             
             #if the drone is going up and down in the exact same position
             if data.x == data.x1 and data.y == data.y1:
@@ -97,7 +101,7 @@ def GetMissionWaypoints(filename):
                 data.type = WPaction.HORIZONTAL
 
 
-        elif(action == takeoff or action == landing): #TODO: add RTL to this condition
+        elif(action == takeoff or action == landing):
             
             #Get Current position
             data.x = last.x1;
@@ -107,7 +111,7 @@ def GetMissionWaypoints(filename):
             #Get next way point 
             data.x1 = last.x1;
             data.y1 = last.y1;
-            data.z1 = float(default.alt + float(split[10])); #TODO: comment later
+            data.z1 = float(default.alt + float(split[10]));
 
             data.type = WPaction.VERTICAL_UP
 

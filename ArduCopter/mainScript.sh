@@ -7,6 +7,7 @@ usage(){
 	printf "\033[1m -l \033[0m: path to store log results\n";
 	printf "\033[1m -n \033[0m: Experiment count : range [1 - max faults file ] : default [ 1 ]\n";
 	printf "\033[1m -r \033[0m: Experiment Repetition : range [ 1 - any ] : default [1]\n";
+	printf "\033[1m -o \033[0m: Aditional address to connect a GCS: format [x.x.x.x:xxxx].\n";
 	printf "\033[1m -h \033[0m: This help screen.\n";
 }
 
@@ -20,7 +21,7 @@ argumentParsing(){
 	nRep=1;
 	nFault=1;
 
-    while getopts ":s:l:Cr:n:h" opt; do
+    while getopts ":s:l:Cr:n:h:o:" opt; do
         case $opt in
             s) # emulation speed
 
@@ -91,6 +92,26 @@ argumentParsing(){
 				fi
                 ;;
 
+			o)
+				printf "$OPTARG"
+				local regex="^([0-9]{1,3})+(\.[0-9]{1,3}){3}:([0-9]{2,5})"
+				if ! [[ $OPTARG =~ $regex ]]; then
+					printf "\033[1;31mThe address '$OPTARG' is not valid!\n\033[0m"
+					exit 1;
+				fi
+
+				local IFS=".:";local -a a=($OPTARG)
+				local quad
+				for quad in {0..3}; do
+					if [[ "${a[$quad]}" -gt 255 ]]; then
+						printf "\033[1;31mThe address '$OPTARG' is not valid!\n\033[0m"
+						exit 1;
+					fi
+				done
+
+				IPADDRESS="$OPTARG"
+				;;
+
 			h)
 				usage
 				exit 0;
@@ -119,6 +140,8 @@ argumentParsing(){
 	if [ ! -z $logAlt ]; then
 		printf "Alternative log Location: $logAlt\n"
 	fi
+
+	[[ -z $IPADDRESS ]] || printf "GCS IP: \t\t$IPADDRESS\n"
 
 	printf "\n---------------------------------------------\n\n\033[0m"
 
@@ -348,7 +371,11 @@ runTests(){
 		createRepetitionFolders $i
 
 		#start simulation
-		xterm -hold -e "$HOME/ardupilot/Tools/autotest/sim_vehicle.py -j4 -l $lat,$lng,0,0 -S $EMULATION_SPEED > logs/faultLog_$currentMission.log 2>&1" &
+		simCommand="sim_vehicle.py -j4 -l $lat,$lng,0,0 -S $EMULATION_SPEED"
+		[[ -z $IPADDRESS ]] || simCommand=$simCommand" --out=udp:$IPADDRESS"
+		simCommand=$simCommand" > logs/faultLog_$currentMission.log 2>&1"
+		#xterm -hold -e "sim_vehicle.py -j4 -l $lat,$lng,0,0 -S $EMULATION_SPEED > logs/faultLog_$currentMission.log 2>&1" &
+		xterm -hold -e $simCommand &
 
 		if [ "$CONSOLE" == true ]; then
 			sleep 3
@@ -356,7 +383,7 @@ runTests(){
 		fi
 
 		#Wait for SITL to boot up
-		sleep 30
+		sleep 10
 
 		#Start fault injector, This does not mean it will inject faults.
 		start=$SECONDS	

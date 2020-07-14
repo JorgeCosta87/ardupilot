@@ -4,7 +4,10 @@ from LogUtils import WPaction as movement
 import math
 
 def calculate_acceleration(dist_xy, dist_z, vel, accel_xy, accel_z):
-    return math.sqrt( (vel ** 2) / (((accel_xy * dist_xy) ** 2) + ((accel_z * dist_z) ** 2)) )
+    if (((accel_xy * dist_xy) ** 2) + ((accel_z * dist_z) ** 2)) == 0:
+        return 0
+
+    return math.sqrt( (vel ** 2) / (((accel_xy * dist_xy) ** 2) + ((accel_z * dist_z) ** 2)))
 
 def getEstimatedMissionTime(filename, emulation_speed = 1, accel_xy = 100, accel_z = 100, up_speed = 2.5, dn_speed = 1.5, wp_speed = 5.0):
     waypointSpeed = ([up_speed, dn_speed, wp_speed])
@@ -46,5 +49,7 @@ def getEstimatedMissionTime(filename, emulation_speed = 1, accel_xy = 100, accel
             time_in_seconds += ( z_distance / waypointSpeed[waypoint.type] )
             time_in_seconds += (z_distance * GRAVITY_Z)
             time_in_seconds += accelTime * 2
+        
+        time_in_seconds += waypoint.delay
 
     return time_in_seconds / int(emulation_speed);
