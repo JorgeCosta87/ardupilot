@@ -21,7 +21,7 @@ argumentParsing(){
 	nRep=1;
 	nFault=1;
 
-    while getopts ":s:l:Cr:n:h:o:" opt; do
+    while getopts ":s:l:Cr:n:ho:" opt; do
         case $opt in
             s) # emulation speed
 
