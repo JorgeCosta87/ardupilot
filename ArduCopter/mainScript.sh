@@ -93,7 +93,6 @@ argumentParsing(){
                 ;;
 
 			o)
-				printf "$OPTARG"
 				local regex="^([0-9]{1,3})+(\.[0-9]{1,3}){3}:([0-9]{2,5})"
 				if ! [[ $OPTARG =~ $regex ]]; then
 					printf "\033[1;31mThe address '$OPTARG' is not valid!\n\033[0m"
