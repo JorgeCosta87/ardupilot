@@ -385,7 +385,7 @@ runTests(){
 		fi
 
 		#Wait for SITL to boot up
-		sleep 10
+		sleep 20
 
 		#Start fault injector, This does not mean it will inject faults.
 		start=$SECONDS	
