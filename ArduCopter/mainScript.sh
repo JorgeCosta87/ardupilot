@@ -98,6 +98,9 @@ argumentParsing(){
 					printf "\033[1;31mThe address '$OPTARG' is not valid!\n\033[0m"
 					exit 1;
 				fi
+				
+				#Get only the regex strig and ignore any extra data 
+				OPTARG="${BASH_REMATCH[0]}"
 
 				local IFS=".:";local -a a=($OPTARG)
 				local quad
