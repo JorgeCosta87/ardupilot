@@ -260,7 +260,7 @@ writeResults(){
 	#if log file doesn't exist, write header and create file.
 	if [ ! -f "$resultFile" ]; then
 		printf "ID,REPETITION,INJECTION,MISSION_NAME,RADIUS,SENSOR,METHOD,DEALY_START" > "$resultFile" 
-		printf ",DURATION,WP_TRIGGER,X,Y,Z,MIN,MAX,NOISE_D,NOISE_M,MISSION_RESULT\n" >> "$resultFile"
+		printf ",INJECTION_DURATION,WP_TRIGGER,X,Y,Z,MIN,MAX,NOISE_D,NOISE_M,RUN_DURATION,MISSION_RESULT\n" >> "$resultFile"
 	fi
 
 	if [ "${array[1]}" == 1 ]; then
@@ -359,10 +359,15 @@ writeResults(){
 		result=$(python Utils/EvaluateMission.py "$currentMissionFileName" "$runFolder/gps.log")
 	fi
 
+	#Get the run duration
+	local firstLine=$(head -1 "$runFolder/gps.log" | cut -d "," -f2)
+	local lastLine=$(sed -e '$!d' "$runFolder/gps.log" | cut -d "," -f2)
+	local difference=$(./Utils/GetTimeDifference.py $firstLine $lastLine)
+
 	array[15]=$(echo "${array[15]//[$'\t\r\n ']}")
 	printf "$currentMission,$i,$injection,${array[2]},${array[3]},$sensor,$method," >> "$resultFile"
 	printf "${array[6]},${array[7]},${array[8]},${array[9]},${array[10]},${array[11]}," >> "$resultFile"
-	printf "${array[12]},${array[13]},${array[14]},${array[15]},$result\n" >> "$resultFile"
+	printf "${array[12]},${array[13]},${array[14]},${array[15]},$difference,$result\n" >> "$resultFile"
 }
 
 runTests(){

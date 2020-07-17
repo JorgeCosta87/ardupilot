@@ -168,7 +168,8 @@ class Filter(IntEnum):
     MAX         = 14
     NOISE_D     = 15
     NOISE_M     = 16
-    RESULT      = 17
+    TIME_ELAPSED= 17
+    RESULT      = 18
 
 
 # Convert result file to data
@@ -203,6 +204,7 @@ def read_results(filename):
         data[Filter.MAX]        = int(split[Filter.MAX])
         data[Filter.NOISE_D]    = float(split[Filter.NOISE_D])
         data[Filter.NOISE_M]    = float(split[Filter.NOISE_M])
+        data[Filter.TIME_ELAPSED] = split[Filter.TIME_ELAPSED]
         data[Filter.RESULT]     = State[split[Filter.RESULT].rstrip('\n')]
 
         results.append(data)
@@ -270,6 +272,47 @@ def organize_data(field,data):
     return prepare_JSON_data(results)
 
 
+def organize_data_by_sensor(sensor, data, method = Method.NONE):
+    values = []
+    for block in data:
+        if sensor.name != block[Filter.SENSOR]:
+            continue
+
+        if method != Method.NONE and block[Filter.METHOD] != method.name:
+            continue
+
+        exists, value = get_existing(values, block[Filter.METHOD])
+        result = block[Filter.RESULT]
+
+        if result == State.NORMAL:
+            value.normal += 1
+
+        elif result == State.MINOR_FAULT:
+            value.minor += 1
+
+        elif result == State.MAJOR_FAULT:
+            value.major += 1
+
+        else:
+            value.crash += 1
+
+        if not exists:
+            values.append(value)
+
+    # Creates dictionary with data to plot
+    results = {}
+    for stat in values:
+        results[stat.header] = {   
+            "Mission"     : stat.header,
+            "Normal"      : stat.normal,
+            "Minor Fault" : stat.minor,
+            "Major Fault" : stat.major,
+            "Crash"       : stat.crash
+        }
+    
+    return prepare_JSON_data(results)
+
+
 def GenerateChartPage(filename):
     # read data from results file
     dataset = read_results(filename)
@@ -281,10 +324,12 @@ def GenerateChartPage(filename):
     mission_results = organize_data(Filter.MISSION, dataset)
     sensor_results  = organize_data(Filter.SENSOR, dataset)
     method_results  = organize_data(Filter.METHOD, dataset)
-    delay_results   = organize_data(Filter.DELAY, dataset)
-    duration_results = organize_data(Filter.DURATION, dataset)
-    noiseD_results = organize_data(Filter.NOISE_D, dataset)
-    noiseM_results = organize_data(Filter.NOISE_M, dataset)
+    cross_results   = organize_data_by_sensor(Sensor.ACCELEROMETER, dataset)
+
+    #delay_results   = organize_data(Filter.DELAY, dataset)
+    #duration_results = organize_data(Filter.DURATION, dataset)
+    #noiseD_results = organize_data(Filter.NOISE_D, dataset)
+    #noiseM_results = organize_data(Filter.NOISE_M, dataset)
     
 
     # Generate HTML
@@ -292,10 +337,11 @@ def GenerateChartPage(filename):
     chart.AddChart("Missions Overview", mission_results)
     chart.AddChart("Sensors Overview", sensor_results)
     chart.AddChart("Methods Overview", method_results)
-    chart.AddChart("Delays Overview", delay_results)
-    chart.AddChart("Durations Overview", duration_results)
-    chart.AddChart("Noise Deviation Overview", noiseD_results)
-    chart.AddChart("Noise Mean Overview", noiseM_results)
+    chart.AddChart("Accelerometer Offset Injection overview", cross_results)
+    #chart.AddChart("Delays Overview", delay_results)
+    #chart.AddChart("Durations Overview", duration_results)
+    #chart.AddChart("Noise Deviation Overview", noiseD_results)
+    #chart.AddChart("Noise Mean Overview", noiseM_results)
     
     print chart.GetPage()
 
