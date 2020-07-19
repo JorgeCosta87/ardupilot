@@ -1,30 +1,9 @@
 import numpy as np
 from LogUtils import WPaction
 import LogUtils as utils
-import os.path
 from enum import IntEnum
-
-def points_in_cylinder(pt1, pt2, r, q):
-    vec = pt2 - pt1
-    const = r * np.linalg.norm(vec)
-
-    return (np.dot(q - pt1, vec) >= 0 and np.dot(q - pt2, vec) <= 0 \
-            and np.linalg.norm(np.cross(q - pt1, vec)) <= const)
-
-
-def get_line_equation(pointA, pointB):
-    x_coords, y_coords = zip(*[pointA, pointB])
-
-    A = np.vstack([x_coords, np.ones(len(x_coords))]).T
-    m, b = np.linalg.lstsq(A, y_coords)[0]
-
-    return m,b;
-
-
-#From :https://stackoverflow.com/questions/26818772/python-checking-if-a-point-is-in-sphere-with-center-x-y-z/26818848 by - Smit
-def in_sphere(point, sphere, radius):
-    return (point[0] - sphere[0])**2 + (point[1] - sphere[1])**2 < radius ** 2
-
+import os.path
+import math
 
 class State(IntEnum):
     NORMAL      = 0
@@ -32,54 +11,141 @@ class State(IntEnum):
     MAJOR_FAULT = 2
     CRASH       = 3
 
+class Validation:
+    def __init__(self, minor = 1, major = 2):
+        if minor > major:
+            major = minor + 1
 
-def get_point_status(point, wp_x, wp_y, wp_z, wp_type):
-    #Exactly one meeter in GPS notation: https://gis.stackexchange.com/questions/8650/measuring-accuracy-of-latitude-and-longitude
-    GPS_NORMAL_RADIUS = (0.000001 * 10) - (0.0000001 * 10) #Exactly 1 meter
+        #Exactly one meeter in GPS notation: https://gis.stackexchange.com/questions/8650/measuring-accuracy-of-latitude-and-longitude
+        self.__METER_RADIUS = (0.00001 - 0.000001)
+        self._MINOR_Z_RADIUS = None
+        self._MAJOR_Z_RADIUS = None
+        self._MINOR_XY_RADIUS = None
+        self._MAJOR_XY_RADIUS = None
 
-    #The minor fault boundary limit is equal to 200% of the normal gps boudary
-    GPS_HIGH_RADIUS = GPS_NORMAL_RADIUS * 2 #Exactly 2 meters
+        self._set_radius(minor,major)
 
-    #Since the Altitude is measured in meters, we use M_RADIUS as the meter radius. It contains the largest radius. 
-    M_RADIUS = 2 #Meter
+    def _set_radius(self, minor, major):
+        if minor <= 0 or major <= 0:
+            return 
 
-    for i, j in zip(range(0,len(wp_x),2), range(len(wp_x)/2)):
-        point1 = np.array([ wp_x[i], wp_y[i], 0 ])
-        point2 = np.array([ wp_x[i+1], wp_y[i+1], 0 ])
-        z = point[2]
+        self._MINOR_Z_RADIUS = minor
+        self._MAJOR_Z_RADIUS = major
+        self._MINOR_XY_RADIUS = self.__METER_RADIUS * self._MINOR_Z_RADIUS
+        self._MAJOR_XY_RADIUS = self.__METER_RADIUS * self._MAJOR_Z_RADIUS
 
-        if wp_type[j] == WPaction.HORIZONTAL:
+
+    #From :https://stackoverflow.com/questions/26818772/python-checking-if-a-point-is-in-sphere-with-center-x-y-z/26818848 by - Smit
+    def _point_in_circle(self, point, circle, radius):
+        return (point[0] - circle[0])**2 + (point[1] - circle[1])**2 < radius **2
+
+
+    def _get_slope(self, p1,p2):
+        return (p2[1] - p1[1]) / (p2[0] - p1[0])
+
+
+    def _get_origin(self, p1,p2):
+        return p1[1] - (_get_slope(p1,p2) * p1[0])
+
+
+    def _valid_value(self, value, p1, p2):
+        return (value >= p1 and value <= p2) or (value <= p1 and value >= p2)
+    
+
+    def _get_line_equation(self, p1, p2):
+        m = (p2[1] - p1[1]) / (p2[0] - p1[0])
+        b = p1[1] - (m * p1[0])
+        return m,b
+
+
+    def distance_between_line_and_points(self, p1, p2, q):
+        p1 = np.asarray(p1); p2 = np.asarray(p2); q  = np.asarray(q)
+        return np.linalg.norm(np.cross(p2-p1, p1-q))/np.linalg.norm(p2-p1)
+
+
+    def _point_in_cylinder(self, p1, p2, r, q, type):
+        x = 0; y = 1; z = 2
+
+        if type == WPaction.VERTICAL_UP or type == WPaction.VERTICAL_DOWN:
+            return self._valid_value(q[z], p1[z], p2[z])
+    
+        m, b = self._get_line_equation((p1[x],p1[y]), (p2[x],p2[y]))
+        result_y = abs(((m * q[x]) + b) - q[y])
+        result_x = abs(((q[y] - b) / m) - q[x])
+
+        return math.sqrt((result_x**2) + (result_y**2)) <= r
+
+
+    def _altitude_check(self, point, y, z, type, i, j):
+        if type[j] == WPaction.HORIZONTAL and y[i] != y[i+1]:
             #here, we are using the Y as x and Z as Y to find the correct height of the point
-            x = point[1]
-            m, b = get_line_equation((wp_y[i], wp_z[i]), (wp_y[i+1], wp_z[i+1]))
-            result = abs(((m * x) + b) - z)
-            z_check = result <= M_RADIUS
-        
-        else:
-            z_check = (z >= wp_z[i] and z <= wp_z[i+1]) or (z <= wp_z[i] and z >= wp_z[i+1])
+            m, b = self._get_line_equation((y[i], z[i]), (y[i+1], z[i+1]))
+            result = abs(((m * point[1]) + b) - point[2])
             
+            z_check_normal = result <= self._MINOR_Z_RADIUS
+            z_check_minor  = result <= self._MAJOR_Z_RADIUS
 
-        if points_in_cylinder(point1,point2, GPS_NORMAL_RADIUS, point) and z_check:
-            return State.NORMAL
+        else:
+            if self._valid_value(point[2], z[i], z[i+1]) == True:
+                z_check_normal = True
+                z_check_minor  = False
+            else:
+                z_check_normal =  (point[2] >= z[i]-self._MINOR_Z_RADIUS and point[2] <= z[i+1]+self._MINOR_Z_RADIUS) or (point[2] >= z[i]+self._MINOR_Z_RADIUS and point[2] <= z[i+1]-self._MINOR_Z_RADIUS)
+                z_check_minor  =  (point[2] >= z[i]-self._MAJOR_Z_RADIUS and point[2] <= z[i+1]+self._MAJOR_Z_RADIUS) or (point[2] >= z[i]+self._MAJOR_Z_RADIUS and point[2] <= z[i+1]-self._MAJOR_Z_RADIUS)
+        
+        return z_check_normal, z_check_minor
 
-        elif points_in_cylinder(point1,point2, GPS_HIGH_RADIUS, point) and z_check:
+
+    def _check_corners(self, point, x, y, z, minor_fault_check):
+        rng = [0,len(x)-1]
+        rng += range(1, len(x)-1, 2)
+        print "checking corners"
+        
+        for i in rng:
+            z_check_normal = (z >= z[i]-self._MINOR_Z_RADIUS and z <= z[i]+self._MINOR_Z_RADIUS)
+            z_check_minor  = (z >= z[i]-self._MAJOR_Z_RADIUS and z <= z[i]+self._MAJOR_Z_RADIUS)
+
+            if self._point_in_circle(point,[ x[i], y[i] ], self._MINOR_XY_RADIUS ) and z_check_normal:
+                return State.NORMAL
+
+            elif self._point_in_circle(point,[ x[i], y[i] ], self._MAJOR_XY_RADIUS) and z_check_minor:
+                minor_fault_check[0] = True
+                print "minor inside"
+                #return State.MINOR_FAULT
+
+
+    def is_point_inside(self, point, x, y, z, type):
+        minor_fault_check = [False]
+        for i, j in zip(range(0,len(x),2), range(len(x)/2)):
+            p1 = np.array([ x[i], y[i], z[i]])
+            p2 = np.array([ x[i+1], y[i+1], z[i+1]])
+
+            z_check_normal, z_check_minor = self._altitude_check(point, y, z, type, i, j)
+        
+            #print "Z Check: ", z_check_normal, z_check_minor, type[j].name, " - ", j , " ## cylinder --> ",self._point_in_cylinder(p1,p2, self._MINOR_XY_RADIUS, point, type[j]),self._point_in_cylinder(p1,p2, self._MAJOR_XY_RADIUS, point, type[j])
+            
+            if self._point_in_cylinder(p1,p2, self._MINOR_XY_RADIUS, point, type[j]) and z_check_normal:
+                return State.NORMAL
+            
+            elif self._point_in_cylinder(p1,p2, self._MAJOR_XY_RADIUS, point, type[j]) and z_check_minor:
+                print "minor"
+                #pa = [p1[0], p1[1]]
+                #pb = [p2[0], p2[1]]
+                #pt = [point[0], point[1]]
+                #print '%f' % self.distance_between_line_and_points(pa, pb, pt) 
+                minor_fault_check = [ True ]
+
+                #return State.MINOR_FAULT
+
+        
+        corners = self._check_corners(point, x, y, z, minor_fault_check)
+        if corners == State.NORMAL:
+            return corners
+        
+        if minor_fault_check[0] == True:
             return State.MINOR_FAULT
 
-    
-    #Check if the point is not in a corner
-    rng = [0,len(wp_x)-1]
-    rng += range(1, len(wp_x)-1, 2)
-    
-    for k in rng:
-        z_check = wp_z[k] - point[2] < M_RADIUS
-
-        if in_sphere(point,[ wp_x[k], wp_y[k] ], GPS_NORMAL_RADIUS) and z_check:
-            return State.NORMAL
-
-        elif in_sphere(point,[ wp_x[k], wp_y[k] ], GPS_HIGH_RADIUS) and z_check:
-            return State.MINOR_FAULT
-    
-    return State.MAJOR_FAULT
+        return State.MAJOR_FAULT
 
 
 def EvaluateMission(mission_path, run):
@@ -110,9 +176,12 @@ def EvaluateMission(mission_path, run):
     ##Evaluate mission
     STATUS = State.NORMAL
     error_x = []; error_y = []; error_z = []
+
+    validate = Validation()
+
     #for each point in the logs
     for i in range(len(x)):
-        TEMP_STATUS = get_point_status(np.array([x[i],y[i],z[i]]), X, Y, Z, wp_type)
+        TEMP_STATUS = validate.is_point_inside(np.array([x[i],y[i],z[i]]), X, Y, Z, wp_type)
 
         if TEMP_STATUS != State.NORMAL:
             STATUS = TEMP_STATUS

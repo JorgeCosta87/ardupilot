@@ -183,8 +183,18 @@ if options.eval and options.mission and options.files:
     STATUS = State.NORMAL
     error_x = []; error_y = []; error_z = []
     #for each point in the logs
+    for i in range(0,len(X),2):
+        print "i: ",i," = ", X[i], Y[i], Z[i], " ## ", X[i+1], Y[i+1], Z[i+1]
+
+    
+    #m,b = validation.get_line_equation((Y[14],Z[14]),(Y[15],Z[15]))
+    #result = (((m * Y[15] ) + b))
+    #print result
+
+    evaluate = validation.Validation()
+
     for i in range(len(x)):
-        TEMP_STATUS = validation.get_point_status(np.array([x[i],y[i],z[i]]), X, Y, Z, wp_type)
+        TEMP_STATUS = evaluate.is_point_inside(np.array([x[i],y[i],z[i]]), X, Y, Z, wp_type)
 
         if TEMP_STATUS != State.NORMAL:
             STATUS = TEMP_STATUS
@@ -205,6 +215,10 @@ if options.eval and options.mission and options.files:
 
     if(len(error_x) > 0):
         ax.plot(error_x,error_y,error_z, 'o', color='red', label='Point of error')
+        print "Error distance: %f" % (evaluate.distance_between_line_and_points((X[4],Y[4]), (X[5],Y[5]), (error_x[0],error_y[0])))
+        print "dist: ", round(distance((error_y[0], error_x[0]),(Y[4],X[4])).meters,3)
+        print error_z
+
 
 if options.distance:
     if not options.mission or not options.files:
