@@ -272,7 +272,7 @@ def organize_data(field,data):
     return prepare_JSON_data(results)
 
 
-def organize_data_by_sensor(sensor, data, method = Method.NONE):
+def organize_data_by_sensor(sensor, data, method = Method.NONE, detailed = Filter.INJECTION):
     values = []
     for block in data:
         if sensor.name != block[Filter.SENSOR]:
@@ -281,7 +281,13 @@ def organize_data_by_sensor(sensor, data, method = Method.NONE):
         if method != Method.NONE and block[Filter.METHOD] != method.name:
             continue
 
-        exists, value = get_existing(values, block[Filter.METHOD])
+        if detailed != Filter.INJECTION:
+            if block[detailed] == 0:
+                continue
+            exists, value = get_existing(values, block[detailed])
+        else:
+            exists, value = get_existing(values, block[Filter.METHOD])
+        
         result = block[Filter.RESULT]
 
         if result == State.NORMAL:
@@ -324,20 +330,43 @@ def GenerateChartPage(filename):
     mission_results = organize_data(Filter.MISSION, dataset)
     sensor_results  = organize_data(Filter.SENSOR, dataset)
     method_results  = organize_data(Filter.METHOD, dataset)
-    cross_results   = organize_data_by_sensor(Sensor.ACCELEROMETER, dataset)
 
     #delay_results   = organize_data(Filter.DELAY, dataset)
     #duration_results = organize_data(Filter.DURATION, dataset)
     #noiseD_results = organize_data(Filter.NOISE_D, dataset)
     #noiseM_results = organize_data(Filter.NOISE_M, dataset)
     
+    myMethods = [ Method.OFFSET, Method.SCALE_DIVIDE, Method.SCALE_MULTIPLY ]
+    mySensors = [ Sensor.ACCELEROMETER, Sensor.BAROMETER, Sensor.GYROSCOPE, Sensor.COMPASS, Sensor.TEMPERATURE ]
+    myVars    = [ Filter.X, Filter.Y, Filter.Z ]
 
     # Generate HTML
     chart = ChartHandler()
     chart.AddChart("Missions Overview", mission_results)
     chart.AddChart("Sensors Overview", sensor_results)
     chart.AddChart("Methods Overview", method_results)
-    chart.AddChart("Accelerometer Offset Injection overview", cross_results)
+
+    for sensor in mySensors:
+        cross_results = organize_data_by_sensor(sensor, dataset)
+        chart.AddChart( sensor.name + " Methods Injection overview", cross_results)
+        for method in myMethods:
+            cross_results = organize_data_by_sensor(sensor, dataset, method)
+            chart.AddChart( sensor.name + " " + method.name + " Injection overview", cross_results)
+
+            if method == Method.OFFSET:
+                if sensor == Sensor.TEMPERATURE or sensor == Sensor.BAROMETER:
+                    cross_results = organize_data_by_sensor(sensor, dataset, method, Filter.X)
+                    chart.AddChart( sensor.name + " " + method.name + " variable "+ Filter.X.name +" detailed Injection overview", cross_results)
+                else:
+                    for var in myVars:
+                        cross_results = organize_data_by_sensor(sensor, dataset, method, var)
+                        chart.AddChart( sensor.name + " " + method.name + " variable "+ var.name +" detailed Injection overview", cross_results)
+            else:
+                cross_results = organize_data_by_sensor(sensor, dataset, method, Filter.MAX)
+                chart.AddChart( sensor.name + " " + method.name + " detailed Injection overview", cross_results)
+
+    #chart.AddChart("Accelerometer Offset Injection overview", cross_results)
+
     #chart.AddChart("Delays Overview", delay_results)
     #chart.AddChart("Durations Overview", duration_results)
     #chart.AddChart("Noise Deviation Overview", noiseD_results)
