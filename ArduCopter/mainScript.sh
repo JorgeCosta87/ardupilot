@@ -224,6 +224,7 @@ handleLogs(){
 	mv "logs/faultLog_$currentMission.log" "$runFolder/console.log";
 	mv "logs/simulations_report.csv" "$runFolder/";
 	rm "logs/"*.TXT;
+	rm "$runFolder/unfilteredLog.log"
 }
 
 CrashCheck() {
