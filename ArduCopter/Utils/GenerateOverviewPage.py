@@ -29,6 +29,12 @@ class ChartHandler:
             <script type="text/javascript" src="https://www.amcharts.com/lib/3/serial.js"></script>
 
             <script type="text/javascript">
+            function sortByKey(array, key) {
+				return array.sort(function(a, b) {
+					var x = a[key]; var y = b[key];
+					return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+				});
+            }
     """
 
     _bodyTop="""
@@ -42,8 +48,11 @@ class ChartHandler:
         </html>
     """
 
-    def _generateScript(self, title, data, divname):
+    def _generateScript(self, title, data, divname,id):
+        myarray="dataArray_"+str(id)
         return """
+        """+myarray+""" = """+data+"""
+        sortByKey("""+myarray+""","Mission")
         AmCharts.makeChart(\""""+divname+"""\",
         {
             "type": "serial",
@@ -125,7 +134,8 @@ class ChartHandler:
                     "size": 15,
                     "text": \""""+title+"""\"
                 }
-            ],"""+data+"""    
+            ],
+            "dataProvider": """+myarray+"""    
         });"""
 
     def AddChart(self, title, data):
@@ -139,7 +149,7 @@ class ChartHandler:
 
         # add chart scripts
         for i, chart in enumerate(self.charts):
-            page += self._generateScript(chart[0], chart[1],divname+str(i))
+            page += self._generateScript(chart[0], chart[1],divname+str(i),i)
         
         # add body and div components
         page += self._bodyTop
@@ -233,7 +243,7 @@ def prepare_JSON_data(results):
     for key in results.keys():
         dataArray.append(results[key])
     
-    return json.dumps({ "dataProvider": dataArray })[1:-1] # Removes { } from the begining and end
+    return json.dumps(dataArray)#[1:-1] # Removes { } from the begining and end
 
 
 def organize_data(field,data):
@@ -362,7 +372,7 @@ def GenerateChartPage(filename):
                         cross_results = organize_data_by_sensor(sensor, dataset, method, var)
                         chart.AddChart( sensor.name + " " + method.name + " variable "+ var.name +" detailed Injection overview", cross_results)
             else:
-                cross_results = organize_data_by_sensor(sensor, dataset, method, Filter.MAX)
+                cross_results = organize_data_by_sensor(sensor, dataset, method, Filter.X)
                 chart.AddChart( sensor.name + " " + method.name + " detailed Injection overview", cross_results)
 
     #chart.AddChart("Accelerometer Offset Injection overview", cross_results)

@@ -198,6 +198,11 @@ handleLogs(){
 	local rawLog="$runFolder/log.bin"
 	local unfilteredLog="$runFolder/unfilteredLog.log"
 
+	if [[ ! -f "logs/00000001.BIN" ]]; then
+		printf "\033[1;31mThe mission was not ran!\n\033[0m";
+		return;
+	fi
+
 	mv "logs/"*.BIN $rawLog;
 
 	# Convert log to txt format
@@ -379,10 +384,10 @@ runTests(){
 		createRepetitionFolders $i
 
 		#start simulation
+		IFS=""
 		simCommand="sim_vehicle.py -j4 -l $lat,$lng,0,0 -S $EMULATION_SPEED"
 		[[ -z $IPADDRESS ]] || simCommand=$simCommand" --out=udp:$IPADDRESS"
 		simCommand=$simCommand" > logs/faultLog_$currentMission.log 2>&1"
-		#xterm -hold -e "sim_vehicle.py -j4 -l $lat,$lng,0,0 -S $EMULATION_SPEED > logs/faultLog_$currentMission.log 2>&1" &
 		xterm -hold -e $simCommand &
 
 		if [ "$CONSOLE" == true ]; then
@@ -391,7 +396,7 @@ runTests(){
 		fi
 
 		#Wait for SITL to boot up
-		sleep 20
+		sleep 30
 
 		#Start fault injector, This does not mean it will inject faults.
 		start=$SECONDS	
