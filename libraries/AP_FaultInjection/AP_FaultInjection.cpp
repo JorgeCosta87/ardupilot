@@ -230,16 +230,26 @@ void AP_FaultInjection::manipulate_values(Vector3f *rawField, uint8_t sens){
         }
 
         case INJECT_SCALE_MULTIPLY: {
-            rawField->x *= static_rawField.x;
-            rawField->y *= static_rawField.x;
-            rawField->z *= static_rawField.x;
+            if(static_rawField.x != 0.0)
+                rawField->x *= static_rawField.x;
+            
+            if(static_rawField.y != 0.0)
+                rawField->y *= static_rawField.y;
+            
+            if(static_rawField.z != 0.0)
+                rawField->z *= static_rawField.z;
             break;
         }
 
         case INJECT_SCALE_DIVIDE: {
-            rawField->x /= static_rawField.x;
-            rawField->y /= static_rawField.x;
-            rawField->z /= static_rawField.x;
+            if(static_rawField.x != 0.0)
+                rawField->x /= static_rawField.x;
+            
+            if(static_rawField.y != 0.0)
+                rawField->y /= static_rawField.y;
+            
+            if(static_rawField.z != 0.0)
+                rawField->z /= static_rawField.z;
             break;
         }
         

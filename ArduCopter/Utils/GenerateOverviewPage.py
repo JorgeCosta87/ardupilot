@@ -215,7 +215,7 @@ def read_results(filename):
         data[Filter.NOISE_D]    = float(split[Filter.NOISE_D])
         data[Filter.NOISE_M]    = float(split[Filter.NOISE_M])
         data[Filter.TIME_ELAPSED] = split[Filter.TIME_ELAPSED]
-        data[Filter.RESULT]     = State[split[Filter.RESULT].rstrip('\n')]
+        data[Filter.RESULT]     = State[split[Filter.RESULT].rstrip('\n\r')]
 
         results.append(data)
 
@@ -363,7 +363,7 @@ def GenerateChartPage(filename):
             cross_results = organize_data_by_sensor(sensor, dataset, method)
             chart.AddChart( sensor.name + " " + method.name + " Injection overview", cross_results)
 
-            if method == Method.OFFSET:
+            if method == Method.OFFSET or method == Method.SCALE_DIVIDE or method == Method.SCALE_MULTIPLY:
                 if sensor == Sensor.TEMPERATURE or sensor == Sensor.BAROMETER:
                     cross_results = organize_data_by_sensor(sensor, dataset, method, Filter.X)
                     chart.AddChart( sensor.name + " " + method.name + " variable "+ Filter.X.name +" detailed Injection overview", cross_results)

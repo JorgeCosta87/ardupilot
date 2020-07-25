@@ -12,10 +12,10 @@ class State(IntEnum):
     CRASH       = 3
 
 class Validation:
-    def __init__(self, minor = 1.5, major = 2):
+    def __init__(self, minor = 1.5, major = 3):
         if minor <= 0 or major <= 0:
-            minor = 1
-            major = 2
+            minor = 1.5
+            major = 3
 
         if minor > major:
             major = minor + 1
