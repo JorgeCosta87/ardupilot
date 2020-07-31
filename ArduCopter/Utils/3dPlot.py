@@ -206,9 +206,13 @@ if options.eval and options.mission and options.files:
         ax.text2D(0.05, 0.95, "Major Fault", color='red', transform=ax.transAxes)
 
     if(len(error_x) > 0):
-        ax.plot(error_x[0:-2],error_y[0:-2],error_z[0:-2], 'o', color='orange', label='Minor Faults')
+        if STATUS == State.MINOR_FAULT:
+            ax.plot(error_x,error_y,error_z, 'o', color='orange', label='Minor Faults')
 
         if STATUS == State.MAJOR_FAULT:
+            if len(error_x) > 1:
+                ax.plot(error_x[0:-1],error_y[0:-1],error_z[0:-1], 'o', color='orange', label='Minor Faults')
+
             ax.plot([error_x[-1]],[error_y[-1]],[error_z[-1]], 'o', color='red', label='Major Fault')
 
 

@@ -35,6 +35,10 @@ class Validation:
     def _is_point_in_cylinder(self, point, p1, p2, radius):
         vec = p2 - p1
         const = radius * np.linalg.norm(vec)
+
+        if np.count_nonzero(vec) == 0:
+            return False
+
         return len(np.where(np.dot(point - p1, vec) >= 0 and np.dot(point - p2, vec) <= 0
                         and np.linalg.norm(np.cross(point - p1, vec)) <= const)[0]) > 0
 
