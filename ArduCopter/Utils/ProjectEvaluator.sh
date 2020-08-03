@@ -29,7 +29,7 @@ getLastWaypoint(){
 
     line=1
     while [ True ]; do
-        array[20]=$(tail -$line "$mypath/$testFolder/faults.csv" | head -1 | cut -d "," -f23)
+        array[20]=$(tail -$line "$mypath/$testFolder/faults.log" | head -1 | cut -d "," -f23)
 
         re='^[0-9]+$'
         if [[ ${array[20]} =~ $re ]] ; then
