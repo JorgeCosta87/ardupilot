@@ -31,10 +31,11 @@ for waypoint in mission:
     Z.append(waypoint.z)
     Z.append(waypoint.z1)
 
-sphere = (X[-2], Y[-2], Z[-2])
 eval = evaluation.Validation()
+sphere = (X[-2], Y[-2], eval._meters_to_degrees(Z[-2]))
+
 for i in range(len(x)):
-    point = (x[i], y[i], z[i])
+    point = (x[i], y[i], eval._meters_to_degrees(z[i]))
     if eval._is_point_in_sphere(point, sphere, eval._meters_to_degrees(0.15)):
         print True
         exit(0)
