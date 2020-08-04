@@ -53,7 +53,7 @@ main(){
             #    handleNormal
             #fi
 
-            if [ ${array[18]} == "CRASH" ]; then
+            if [ "${array[18]//[$'\t\r\n ']}" == "CRASH" ]; then
                 getLastWaypoint
             else
                 #Hard coding at it's finest
