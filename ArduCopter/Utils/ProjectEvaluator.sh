@@ -35,7 +35,6 @@ getLastWaypoint(){
         if [[ ${array[20]} =~ $re ]] ; then
             break;
         fi
-        echo "increment\n\n"
         ((line++))
     done
 }
