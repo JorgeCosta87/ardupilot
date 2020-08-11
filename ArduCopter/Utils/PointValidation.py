@@ -1,15 +1,10 @@
 import numpy as np
 from LogUtils import WPaction
 import LogUtils as utils
-from enum import IntEnum
+from Enumerators import State
 import os.path
 import math
 
-class State(IntEnum):
-    NORMAL      = 0
-    MINOR_FAULT = 1
-    MAJOR_FAULT = 2
-    CRASH       = 3
 
 class Validation:
     def __init__(self, minor = 1.5, major = 3):

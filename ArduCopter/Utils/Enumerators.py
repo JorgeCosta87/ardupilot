@@ -24,3 +24,11 @@ class Method(IntEnum):
     SCALE_MULTIPLY  = 10
     SCALE_DIVIDE    = 11
     NONE            = 12
+
+class State(IntEnum):
+    NORMAL      = 0
+    MINOR_FAULT = 1
+    MAJOR_FAULT = 2
+    CRASH       = 3
+    STUCK       = 4
+    LOST_PATH   = 5
