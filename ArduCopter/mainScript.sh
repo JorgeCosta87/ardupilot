@@ -232,21 +232,55 @@ handleLogs(){
 	rm "$runFolder/unfilteredLog.log"
 }
 
-CrashCheck() {
+checkIfStuck(){
+    # Get last log line and line from 15 seconds ago
+    lastLine=$(tail -1 "$runFolder/gps.log" | head -1)
+    coordsInit=$(echo "$lastLine" | cut -d "," -f3,4,5)
+    
+    stuck=$(tail -75 "$runFolder/gps.log" | head -1)
+    coordsFinal=$(echo "$stuck" | cut -d "," -f3,4,5)
 
+    coords="$coordsInit,$coordsFinal"
+    
+    # Test if it's in the same position within a radius of 30 cm
+    stuck=$(./DroneCrossedWaypoint.py "$runFolder/gps.log" -c "$coords")
+}
+
+getMissionResult(){
+	local CRASH="CRASH"
+	local STUCK="STUCK"
+	local LOST_PATH="LOST_PATH"
+    local MAJOR_FAULT="MAJOR_FAULT"
+
+	crashCount=$(grep -i "crash" "$runFolder/console.log" | wc -l)
+	if (($crashCount > 0)); then
+		result=$CRASH
+		return
+	fi
+
+	# Read report and check if there was a timeout or not
 	{
 		IFS=","
 		read
 		read -ra pos
-		crash=${pos[3]};
+		timeout=${pos[3]};
 	} < "$runFolder/simulations_report.csv"
 
-	if [ "$crash" == "N" ]; then
-		crashCount=$(grep -i "crash" "$runFolder/console.log" | wc -l)
+	# if there was a timeout
+	if [ "$timeout" == "Y" ]; then
 
-		if (($crashCount > 0)); then
-			crash="Y"
+		# get mission evaluation
+		eval=$(./Utils/EvaluateMission.py "$currentMissionFileName" "$runFolder/gps.log")
+
+        # Check if the drone is stuck or lost path
+        checkIfStuck
+		if [ "$stuck" == "True" ]; then
+			result=$STUCK
+		else
+			result=$LOST_PATH
 		fi
+	else
+		result=$(./Utils/EvaluateMission.py "$currentMissionFileName" "$runFolder/gps.log")
 	fi
 }
 
@@ -357,13 +391,8 @@ writeResults(){
 		method="NONE"
 	fi
 
-	#Check if drone crashed
-	CrashCheck
-	if [ "$crash" == "Y" ]; then
-		result="CRASH"
-	else
-		result=$(python Utils/EvaluateMission.py "$currentMissionFileName" "$runFolder/gps.log")
-	fi
+	#Evaluate Mission and obtain result
+	getMissionResult
 
 	#Get the run duration
 	local firstLine=$(head -1 "$runFolder/gps.log" | cut -d "," -f2)
