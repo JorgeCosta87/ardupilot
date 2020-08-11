@@ -105,18 +105,6 @@ class ChartHandler:
                     "accessibleLabel": "[[title]] [[Mission]] [[value]]",
                     "balloonText": "[[title]] of [[Mission]]:[[value]]",
                     "fillAlphas": 1,
-                    "fillColors": "#54C3FF",
-                    "id": "Stuck",
-                    "labelText": "[[value]]",
-                    "lineColor": "#54C3FF",
-                    "title": "Stuck",
-                    "type": "column",
-                    "valueField": "Stuck"
-                },
-                {
-                    "accessibleLabel": "[[title]] [[Mission]] [[value]]",
-                    "balloonText": "[[title]] of [[Mission]]:[[value]]",
-                    "fillAlphas": 1,
                     "fillColors": "#596680",
                     "id": "Lost Path",
                     "labelText": "[[value]]",
@@ -124,6 +112,18 @@ class ChartHandler:
                     "title": "Lost Path",
                     "type": "column",
                     "valueField": "Lost Path"
+                },
+                {
+                    "accessibleLabel": "[[title]] [[Mission]] [[value]]",
+                    "balloonText": "[[title]] of [[Mission]]:[[value]]",
+                    "fillAlphas": 1,
+                    "fillColors": "#54C3FF",
+                    "id": "Stuck",
+                    "labelText": "[[value]]",
+                    "lineColor": "#54C3FF",
+                    "title": "Stuck",
+                    "type": "column",
+                    "valueField": "Stuck"
                 },
                 {
                     "accessibleLabel": "[[title]] [[Mission]] [[value]]",
@@ -342,6 +342,12 @@ def organize_data_by_sensor(sensor, data, method = Method.NONE, detailed = Filte
 
         elif result == State.MAJOR_FAULT:
             value.major += 1
+
+        elif result == State.STUCK:
+            value.stuck += 1
+
+        elif result == State.LOST_PATH:
+            value.lost_path += 1
 
         else:
             value.crash += 1
