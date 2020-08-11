@@ -105,6 +105,30 @@ class ChartHandler:
                     "accessibleLabel": "[[title]] [[Mission]] [[value]]",
                     "balloonText": "[[title]] of [[Mission]]:[[value]]",
                     "fillAlphas": 1,
+                    "fillColors": "#54C3FF",
+                    "id": "Stuck",
+                    "labelText": "[[value]]",
+                    "lineColor": "#54C3FF",
+                    "title": "Stuck",
+                    "type": "column",
+                    "valueField": "Stuck"
+                },
+                {
+                    "accessibleLabel": "[[title]] [[Mission]] [[value]]",
+                    "balloonText": "[[title]] of [[Mission]]:[[value]]",
+                    "fillAlphas": 1,
+                    "fillColors": "#596680",
+                    "id": "Lost Path",
+                    "labelText": "[[value]]",
+                    "lineColor": "#596680",
+                    "title": "Lost Path",
+                    "type": "column",
+                    "valueField": "Lost Path"
+                },
+                {
+                    "accessibleLabel": "[[title]] [[Mission]] [[value]]",
+                    "balloonText": "[[title]] of [[Mission]]:[[value]]",
+                    "fillAlphas": 1,
                     "fillColors": "#e36464",
                     "id": "Crash",
                     "labelText": "[[value]]",
@@ -228,12 +252,14 @@ def get_existing(array, val):
         if value.header == val:
             return True, value
     
-    temp = namedtuple("value", "header normal minor major crash")
+    temp = namedtuple("value", "header normal minor major crash stuck lost_path")
     temp.header = val
     temp.normal = 0
     temp.minor  = 0
     temp.major  = 0
     temp.crash  = 0
+    temp.stuck  = 0
+    temp.lost_path = 0
 
     return False, temp
 
@@ -262,6 +288,12 @@ def organize_data(field,data):
         elif result == State.MAJOR_FAULT:
             value.major += 1
 
+        elif result == State.STUCK:
+            value.stuck += 1
+
+        elif result == State.LOST_PATH:
+            value.lost_path += 1
+
         else:
             value.crash += 1
 
@@ -276,7 +308,9 @@ def organize_data(field,data):
             "Normal"      : stat.normal,
             "Minor Fault" : stat.minor,
             "Major Fault" : stat.major,
-            "Crash"       : stat.crash
+            "Lost Path"   : stat.lost_path,
+            "Stuck"       : stat.stuck,
+            "Crash"       : stat.crash,
         }
     
     return prepare_JSON_data(results)
@@ -323,7 +357,9 @@ def organize_data_by_sensor(sensor, data, method = Method.NONE, detailed = Filte
             "Normal"      : stat.normal,
             "Minor Fault" : stat.minor,
             "Major Fault" : stat.major,
-            "Crash"       : stat.crash
+            "Lost Path"   : stat.lost_path,
+            "Stuck"       : stat.stuck,
+            "Crash"       : stat.crash,
         }
     
     return prepare_JSON_data(results)
