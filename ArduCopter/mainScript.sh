@@ -277,7 +277,12 @@ getMissionResult(){
 		if [ "$stuck" == "True" ]; then
 			result=$STUCK
 		else
-			result=$LOST_PATH
+			#check if eval is MAJOR_FAULT then it's lost path, otherwise it's stuck
+            if [ "$eval" == "$MAJOR_FAULT" ]; then
+			    result=$LOST_PATH
+            else
+                result=$STUCK
+            fi
 		fi
 	else
 		result=$(./Utils/EvaluateMission.py "$currentMissionFileName" "$runFolder/gps.log")
